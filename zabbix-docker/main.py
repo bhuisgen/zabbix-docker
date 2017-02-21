@@ -1542,17 +1542,22 @@ class Application(object):
         parser = argparse.ArgumentParser(
             description="Discover and send docker metrics to zabbix server")
         parser.add_argument(
+            "--file",
+            help="configuration file to use",
+            metavar="<FILE>"
+        )
+        parser.add_argument(
             "--host",
-            help="custom zabbix host to use",
-            metavar="<HOST>", default=socket.gethostname())
+            help="host to use for sending zabbix metrics",
+            metavar="<HOST>")
         parser.add_argument(
             "--rootfs",
-            help="custom rootfs path to use",
-            metavar="PATH", default="/")
+            help="rootfs path for retrieving system metrics",
+            metavar="PATH",)
         parser.add_argument(
             "--verbose",
-            help="enable verbose output",
-            action="store_true", default=False)
+            action="store_true",
+            help="enable verbose output")
 
         args = parser.parse_args()
 
@@ -1617,18 +1622,22 @@ class Application(object):
 
         self._config = configparser.ConfigParser()
         self._config.read_string(default_config)
-        self._config.read([
-            '/etc/zabbix-docker/zabbix-docker.conf',
-            os.path.expanduser('~/.zabbix-docker.conf')])
+
+        if "file" in args:
+            self._config.read(args.file)
+        else:
+            self._config.read([
+                '/etc/zabbix-docker/zabbix-docker.conf',
+                os.path.expanduser('~/.zabbix-docker.conf')])
 
         if "rootfs" in args and args.rootfs:
             self._config.set("main", "rootfs", args.rootfs)
 
-        if "debug" in args and args.debug:
-            self._config.set("main", "debug", "yes" if args.debug else "no")
-
         if "host" in args and args.host:
             self._config.set("zabbix", "host", args.host)
+
+        if self._config.get("zabbix", "host") == "":
+            self.config.set("zabbix", "host", socket.gethostname())
 
         if not self._config.getboolean("main", "debug"):
             logging.basicConfig(level=logging.INFO)
