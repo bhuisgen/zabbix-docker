@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+set -e
+
+echo "- test1 1"
+echo "- test2 2"
+echo "- test3 3"
