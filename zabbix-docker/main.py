@@ -13,6 +13,7 @@ import socket
 import sys
 import threading
 import time
+from audioop import max
 
 import docker
 import pyzabbix
@@ -1204,13 +1205,13 @@ class DockerContainersTopWorker(threading.Thread):
                 pass
 
 
-class DockerContainersTrappersService(threading.Thread):
-    """This class implements the containers trappers service thread"""
+class DockerContainersRemoteService(threading.Thread):
+    """This class implements the containers remote service thread"""
 
     def __init__(self, config, stop_event, docker_client, zabbix_sender):
         """Initialize the thread"""
 
-        super(DockerContainersTrappersService, self).__init__()
+        super(DockerContainersRemoteService, self).__init__()
         self._logger = logging.getLogger(self.__class__.__name__)
         self._workers = []
         self._queue = queue.Queue()
@@ -1218,21 +1219,23 @@ class DockerContainersTrappersService(threading.Thread):
         self._stop_event = stop_event
         self._docker_client = docker_client
         self._zabbix_sender = zabbix_sender
-        self._containers_trappers = {}
+        self._containers_outputs = {}
+        self._counter = 0
+        self._lock = threading.Lock()
 
     def run(self):
         """Execute the thread"""
 
-        for _ in (range(self._config.getint("containers_trappers", "workers"))):
-            worker = DockerContainersTrappersWorker(self._config, self._docker_client, self._queue,
-                                                    self._containers_trappers)
+        for _ in (range(self._config.getint("containers_remote", "workers"))):
+            worker = DockerContainersRemoteWorker(self._config, self._docker_client, self, self._queue,
+                                                  self._containers_outputs)
             worker.setDaemon(True)
             self._workers.append(worker)
 
         self._logger.info("service started")
 
-        if self._config.getint("containers_trappers", "startup") > 0:
-            self._stop_event.wait(self._config.getint("containers_trappers", "startup"))
+        if self._config.getint("containers_remote", "startup") > 0:
+            self._stop_event.wait(self._config.getint("containers_remote", "startup"))
 
         for worker in self._workers:
             worker.start()
@@ -1240,13 +1243,19 @@ class DockerContainersTrappersService(threading.Thread):
         while True:
             self.execute()
 
-            if self._stop_event.wait(self._config.getint("containers_trappers", "interval")):
+            if self._stop_event.wait(self._config.getint("containers_remote", "interval")):
                 break
 
         self._logger.info("service stopped")
 
     def execute(self):
         """Execute the service"""
+
+        with self._lock:
+            if self._counter > self._config.getint("containers_remote", "interval"):
+                self._counter = 0
+
+            self._counter += 1
 
         self._logger.info("sending available containers trappers metrics")
 
@@ -1255,102 +1264,104 @@ class DockerContainersTrappersService(threading.Thread):
 
             containers = self._docker_client.containers()
 
-            for container_id in set(self._containers_trappers) - set(map(lambda c: c["Id"], containers)):
-                del self._containers_trappers[container_id]
+            for container_id in set(self._containers_outputs) - set(map(lambda c: c["Id"], containers)):
+                del self._containers_outputs[container_id]
 
             for container in containers:
-                container_name = container["Names"][0][1:]
-
                 if container["Status"].startswith("Up"):
                     self._queue.put(container)
 
-                if container["Id"] in self._containers_trappers:
-                    container_trappers = self._containers_trappers[container["Id"]]["data"]
-                    clock = self._containers_trappers[container["Id"]]["clock"]
+                if container["Id"] in self._containers_outputs:
+                    container_output = self._containers_outputs[container["Id"]]["data"]
+                    clock = self._containers_outputs[container["Id"]]["clock"]
 
-                    for line in container_trappers.splitlines():
-                        self._logger.debug("trapper => %s" % line)
+                    if self._config.getboolean("containers_remote", "trappers"):
+                        for line in container_output.splitlines():
+                            if self._config.getboolean("containers_remote", "trappers_timestamp"):
+                                m = re.match(r'^([^\s]+){1} (([^\s\[]+){1}(?:\[([^\s]+){1}\])?){1} '
+                                             r'(\d+){1} (?:"?((?:\\.|[^"])+)"?){1}$', line)
+                                if m:
+                                    hostname = self._config.get("zabbix", "host") if m.group(1) == "-" else m.group(1)
+                                    key = m.group(2)
+                                    timestamp = int(m.group(5)) if m.group(5) == int(m.group(5)) else clock
+                                    value = re.sub(r'\\(.)', "\\1", m.group(6))
 
-                        if self._config.getboolean("containers_trappers", "timestamp"):
-                            m = re.match(
-                                r'^([^\s]+){1} (([^\s\[]+){1}(?:\[([^\s]+){1}\])?){1} (\d+){1} (?:"?((?:\\.|[^"])+)"?){1}$',
-                                line)
-                            if m:
-                                hostname = self._config.get("zabbix", "host") if m.group(1) == "-" else m.group(1)
-                                key = m.group(2)
-                                timestamp = int(m.group(5)) if m.group(5) == int(m.group(5)) else clock
-                                value = m.group(6)
+                                    metrics.append(pyzabbix.ZabbixMetric(hostname, key, value, timestamp))
+                            else:
+                                m = re.match(r'^([^\s]+){1} (([^\s\[]+){1}(?:\[([^\s]+){1}\])?){1} '
+                                             r'(?:"?((?:\\.|[^"])+)"?){1}$', line)
+                                if m:
+                                    hostname = self._config.get("zabbix", "host") if m.group(1) == "-" else m.group(1)
+                                    key = m.group(2)
+                                    timestamp = clock
+                                    value = re.sub(r'\\(.)', "\\1", m.group(5))
 
-                                metrics.append(pyzabbix.ZabbixMetric(hostname, key, value, timestamp))
-                        else:
-                            m = re.match(
-                                r'^([^\s]+){1} (([^\s\[]+){1}(?:\[([^\s]+){1}\])?){1} (?:"?((?:\\.|[^"])+)"?){1}$',
-                                line)
-                            if m:
-                                hostname = self._config.get("zabbix", "host") if m.group(1) == "-" else m.group(1)
-                                key = m.group(2)
-                                timestamp = clock
-                                value = m.group(5)
+                                    metrics.append(pyzabbix.ZabbixMetric(hostname, key, value, timestamp))
 
-                                self._logger.debug("HOSTNAME => %s" % hostname)
-
-                                metrics.append(pyzabbix.ZabbixMetric(hostname, key, value, timestamp))
-
-            self._logger.debug("sending metrics: %s" % metrics)
+            self._logger.debug("sending %d metrics" % len(metrics))
             self._zabbix_sender.send(metrics)
         except (IOError, OSError):
             self._logger.error("Failed to send containers trappers metrics")
 
             pass
 
+    def counter(self):
+        return self._counter
 
-class DockerContainersTrappersWorker(threading.Thread):
-    """This class implements a containers trappers worker thread"""
 
-    def __init__(self, config, docker_client, containers_trappers_queue, containers_trappers):
+class DockerContainersRemoteWorker(threading.Thread):
+    """This class implements a containers remote worker thread"""
+
+    def __init__(self, config, docker_client, containers_remote_service, containers_remote_queue, containers_outputs):
         """Initialize the thread"""
 
-        super(DockerContainersTrappersWorker, self).__init__()
+        super(DockerContainersRemoteWorker, self).__init__()
         self._logger = logging.getLogger(self.__class__.__name__)
         self._config = config
         self._docker_client = docker_client
-        self._containers_trappers_queue = containers_trappers_queue
-        self._containers_trappers = containers_trappers
+        self._containers_remote_service = containers_remote_service
+        self._containers_remote_queue = containers_remote_queue
+        self._containers_outputs = containers_outputs
 
     def run(self):
         """Execute the thread"""
 
         while True:
             self._logger.debug("waiting execution queue")
-            container = self._containers_trappers_queue.get()
+            container = self._containers_remote_queue.get()
             if container is None:
                 break
 
-            self._logger.info("querying trappers metrics for container %s" % container["Id"])
+            self._logger.info("executing remote command(s) in container %s" % container["Id"])
 
             try:
-                cmd = self._docker_client.exec_create(container,
-                                                      "/usr/bin/find %s -type f -maxdepth 1 -perm /700 -exec {} \;" %
-                                                      self._config.get(
-                                                          "containers_trappers",
-                                                          "directory"),
-                                                      stderr=True,
-                                                      tty=True,
-                                                      user=self._config.get(
-                                                          "containers_trappers", "user"))
+                paths = self._config.get("containers_remote", "path").split(os.pathsep)
+                delays = self._config.get("containers_remote", "delay").split(os.pathsep)
 
-                data = self._docker_client.exec_start(cmd)
+                for index, path in enumerate(paths):
+                    delay = min(int(delays[index]) if ((len(delays) > index) and (int(delays[index]) > 0)) else 1,
+                                int(self._config.get("containers_remote", "interval")))
 
-                inspect = self._docker_client.exec_inspect(cmd)
-                if inspect["ExitCode"] == 0:
-                    self._containers_trappers[container["Id"]] = {
-                        "data": str(data, 'utf-8'),
-                        "clock": time.time()
-                    }
-                else:
-                    self._logger.debug("Failed to execute remote command inside container %s" % container["Id"])
+                    if self._containers_remote_service.counter() % delay != 0:
+                        self._logger.debug("command is delayed to next execution")
+                        continue
+
+                    cmd = self._docker_client.exec_create(
+                        container, "/usr/bin/find %s -type f -maxdepth 1 -perm /700 -exec {} \;" % path, stderr=True,
+                        tty=True, user=self._config.get("containers_remote", "user"))
+
+                    data = self._docker_client.exec_start(cmd)
+
+                    inspect = self._docker_client.exec_inspect(cmd)
+                    if inspect["ExitCode"] == 0:
+                        self._containers_outputs[container["Id"]] = {
+                            "data": str(data, 'utf-8'),
+                            "clock": time.time()
+                        }
+                    else:
+                        self._logger.error("a remote command execution has failed in container %s" % container["Id"])
             except (IOError, OSError):
-                self._logger.error("Failed to get trappers metrics from container %s" % container["Id"])
+                self._logger.error("failed to execute remote command(s) in container %s" % container["Id"])
 
                 pass
 
@@ -1590,7 +1601,7 @@ class Application(object):
         containers = yes
         containers_stats = yes
         containers_top = no
-        containers_trappers = no
+        containers_remote = no
         events = yes
 
         [docker]
@@ -1624,13 +1635,15 @@ class Application(object):
         interval = 60
         workers = 10
 
-        [containers_trappers]
+        [containers_remote]
         startup = 30
         interval = 60
         workers = 10
-        directory = /etc/zabbix/scripts/trapper
+        path = /etc/zabbix/scripts/trapper
+        delay = 1
         user = root
-        timestamp = no
+        trappers = yes
+        trappers_timestamp = no
 
         [events]
         startup = 5
@@ -1657,7 +1670,7 @@ class Application(object):
             self._config.set("zabbix", "host", args.host)
 
         if self._config.get("zabbix", "host") == "":
-            self.config.set("zabbix", "host", socket.gethostname())
+            self._config.set("zabbix", "host", socket.gethostname())
 
         if not self._config.getboolean("main", "debug"):
             logging.basicConfig(level=logging.INFO)
@@ -1703,10 +1716,10 @@ class Application(object):
                                                                 zabbix_sender)
             containers_top_service.start()
 
-        if self._config.getboolean("main", "containers_trappers"):
-            containers_trappers_service = DockerContainersTrappersService(self._config, self._stop_event, docker_client,
-                                                                          zabbix_sender)
-            containers_trappers_service.start()
+        if self._config.getboolean("main", "containers_remote"):
+            containers_remote_service = DockerContainersRemoteService(self._config, self._stop_event, docker_client,
+                                                                      zabbix_sender)
+            containers_remote_service.start()
 
         if self._config.getboolean("main", "events"):
             events_service = DockerEventsService(self._config, self._stop_event, docker_client, zabbix_sender,
