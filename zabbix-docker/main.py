@@ -3,18 +3,19 @@ from __future__ import division
 import argparse
 import configparser
 import datetime
-import docker
 import json
 import logging
 import os
-import pyzabbix
 import queue
 import re
 import signal
 import socket
 import sys
-import time
 import threading
+import time
+
+import docker
+import pyzabbix
 
 
 class DockerDiscoveryService(threading.Thread):
