@@ -1658,7 +1658,7 @@ class Application(object):
         trappers_timestamp = no
 
         [events]
-        startup = 5
+        startup = 30
         interval = 60
         """
 
