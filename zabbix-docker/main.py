@@ -1449,7 +1449,7 @@ class DockerEventsPollerWorker(threading.Thread):
         """EXecute the thread"""
 
         since = None
-        until = datetime.datetime.utcnow() - datetime.timedelta(seconds=-1)
+        until = datetime.datetime.utcnow() - datetime.timedelta(seconds=1)
 
         while True:
             self._logger.debug("waiting execution queue")
@@ -1460,8 +1460,6 @@ class DockerEventsPollerWorker(threading.Thread):
             self._logger.info("sending events metrics")
 
             try:
-                metrics = []
-
                 since = until
                 until = datetime.datetime.utcnow()
 
@@ -1472,7 +1470,6 @@ class DockerEventsPollerWorker(threading.Thread):
                 events_container_kill = 0
                 events_container_stop = 0
                 events_container_destroy = 0
-                clock = time.time()
 
                 for event in self._docker_client.events(since,
                                                         until,
@@ -1498,6 +1495,9 @@ class DockerEventsPollerWorker(threading.Thread):
 
                     if event["status"] == "destroy":
                         events_container_destroy += 1
+
+                metrics = []
+                clock = time.time()
 
                 metrics.append(
                     pyzabbix.ZabbixMetric(
