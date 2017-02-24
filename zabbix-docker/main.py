@@ -1424,13 +1424,6 @@ class DockerEventsService(threading.Thread):
         self._logger.debug("requesting service execution")
         self._events_queue.put("metrics")
 
-    def fire_containers_discovery(self):
-        """Fire discovery service to execute containers discovery"""
-
-        self._logger.debug(
-            "notifying discovery service to execute containers discovery")
-        self._discovery_service.execute_containers()
-
 
 class DockerEventsPollerWorker(threading.Thread):
     """This class implements a events poller worker thread"""
@@ -1446,7 +1439,7 @@ class DockerEventsPollerWorker(threading.Thread):
         self._events_queue = events_queue
 
     def run(self):
-        """EXecute the thread"""
+        """Execute the thread"""
 
         since = None
         until = datetime.datetime.utcnow() - datetime.timedelta(seconds=1)
@@ -1548,7 +1541,7 @@ class DockerEventsPollerWorker(threading.Thread):
                         events_container_destroy,
                         clock))
 
-                if (len(metrics) > 0):
+                if len(metrics) > 0:
                     self._logger.debug("sending %d metrics" % len(metrics))
                     self._zabbix_sender.send(metrics)
             except (IOError, OSError):
@@ -1564,7 +1557,7 @@ class Application(object):
     _lock = threading.Lock()
 
     def __new__(cls):
-        """Create the application instance ingleton"""
+        """Create the application instance singleton"""
 
         if Application._instance is None:
             with Application._lock:
@@ -1667,9 +1660,6 @@ class Application(object):
         [events]
         startup = 5
         interval = 60
-        containers = yes
-        containers_discovery = yes
-        containers_discovery_poll = 15
         """
 
         self._config = configparser.ConfigParser()
