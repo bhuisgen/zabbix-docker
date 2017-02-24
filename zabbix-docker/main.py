@@ -13,7 +13,6 @@ import socket
 import sys
 import threading
 import time
-from audioop import max
 
 import docker
 import pyzabbix
@@ -1602,8 +1601,9 @@ class Application(object):
         # zabbix-docker.conf
 
         [main]
+        log = yes
+        log_level = error
         rootfs = /
-        debug = no
         containers = yes
         containers_stats = yes
         containers_top = no
@@ -1678,14 +1678,24 @@ class Application(object):
         if self._config.get("zabbix", "host") == "":
             self._config.set("zabbix", "host", socket.gethostname())
 
-        if not self._config.getboolean("main", "debug"):
-            logging.basicConfig(level=logging.INFO)
-        else:
-            logging.basicConfig(level=logging.DEBUG)
-            logging.getLogger("docker").setLevel(logging.INFO)
-            logging.getLogger("pyzabbix").setLevel(logging.INFO)
-            logging.getLogger("requests").setLevel(logging.WARNING)
-            logging.getLogger("urllib3").setLevel(logging.WARNING)
+        if not self._config.getboolean("main", "log") == "yes":
+            if self._config.get("main", "log_level") == "error":
+                level = logging.ERROR
+            elif self._config.get("main", "log_level") == "warning":
+                level = logging.WARN
+            elif self._config.get("main", "log_level") == "info":
+                level = logging.INFO
+            elif self._config.get("main", "log_level") == "debug":
+                level = logging.DEBUG
+            else:
+                level = logging.NOTSET
+
+            logging.basicConfig(level=level)
+            if level == logging.DEBUG:
+                logging.getLogger("docker").setLevel(logging.INFO)
+                logging.getLogger("pyzabbix").setLevel(logging.INFO)
+                logging.getLogger("requests").setLevel(logging.WARNING)
+                logging.getLogger("urllib3").setLevel(logging.WARNING)
 
         self._logger.info("starting application")
 
