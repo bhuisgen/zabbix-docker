@@ -3,18 +3,22 @@ from __future__ import division
 import argparse
 import configparser
 import datetime
-import docker
 import json
 import logging
 import os
-import pyzabbix
 import queue
 import re
 import signal
 import socket
 import sys
-import time
 import threading
+import time
+from audioop import max
+
+import docker
+import pyzabbix
+
+import version
 
 
 class DockerDiscoveryService(threading.Thread):
@@ -222,6 +226,8 @@ class DockerDiscoveryContainersWorker(threading.Thread):
                 self._logger.debug("sending metrics: %s" % metrics)
                 self._zabbix_sender.send(metrics)
             except (IOError, OSError):
+                self._logger.error("failed to send containers discovery metrics")
+
                 pass
 
 
@@ -431,6 +437,8 @@ class DockerContainersWorker(threading.Thread):
                 self._logger.debug("sending metrics: %s" % metrics)
                 self._zabbix_sender.send(metrics)
             except (IOError, OSError):
+                self._logger.error("failed to send containers metrics")
+
                 pass
 
 
@@ -496,7 +504,8 @@ class DockerContainersStatsService(threading.Thread):
                     containers_running += 1
 
                 if container["Id"] in self._containers_stats:
-                    container_stats = self._containers_stats[container["Id"]]
+                    container_stats = self._containers_stats[container["Id"]]["data"]
+                    clock = self._containers_stats[container["Id"]]["clock"]
 
                     cpu = \
                         (container_stats["cpu_stats"]["cpu_usage"]["total_usage"] -
@@ -529,42 +538,42 @@ class DockerContainersStatsService(threading.Thread):
                             "docker.containers.stats.cpu[%s]" % (
                                 container_name),
                             "%.2f" % cpu,
-                            container_stats["clock"]))
+                            clock))
                     metrics.append(
                         pyzabbix.ZabbixMetric(
                             self._config.get("zabbix", "host"),
                             "docker.containers.stats.cpu_system[%s]" % (
                                 container_name),
                             "%.2f" % cpu_system,
-                            container_stats["clock"]))
+                            clock))
                     metrics.append(
                         pyzabbix.ZabbixMetric(
                             self._config.get("zabbix", "host"),
                             "docker.containers.stats.cpu_user[%s]" % (
                                 container_name),
                             "%.2f" % cpu_user,
-                            container_stats["clock"]))
+                            clock))
                     metrics.append(
                         pyzabbix.ZabbixMetric(
                             self._config.get("zabbix", "host"),
                             "docker.containers.stats.cpu_periods[%s]" % (
                                 container_name),
                             "%d" % cpu_periods,
-                            container_stats["clock"]))
+                            clock))
                     metrics.append(
                         pyzabbix.ZabbixMetric(
                             self._config.get("zabbix", "host"),
                             "docker.containers.stats.cpu_throttled_periods[%s]" % (
                                 container_name),
                             "%d" % cpu_throttled_periods,
-                            container_stats["clock"]))
+                            clock))
                     metrics.append(
                         pyzabbix.ZabbixMetric(
                             self._config.get("zabbix", "host"),
                             "docker.containers.stats.cpu_throttled_time[%s]" % (
                                 container_name),
                             "%d" % cpu_throttled_time,
-                            container_stats["clock"]))
+                            clock))
 
                     memory = \
                         container_stats["memory_stats"]["usage"] / container_stats["memory_stats"]["limit"] * 100
@@ -575,7 +584,7 @@ class DockerContainersStatsService(threading.Thread):
                             "docker.containers.stats.memory[%s]" % (
                                 container_name),
                             "%.2f" % memory,
-                            container_stats["clock"]))
+                            clock))
 
                     proc = container_stats["pids_stats"]["current"]
 
@@ -585,7 +594,7 @@ class DockerContainersStatsService(threading.Thread):
                             "docker.containers.stats.proc[%s]" % (
                                 container_name),
                             "%d" % proc,
-                            container_stats["clock"]))
+                            clock))
 
                     if (
                         self._config.getboolean("containers_stats", "stats_cpus") and
@@ -605,7 +614,7 @@ class DockerContainersStatsService(threading.Thread):
                                     "docker.containers.stats.percpu[%s,%d]" % (
                                         container_name, i),
                                     "%.2f" % percpu,
-                                    container_stats["clock"]))
+                                    clock))
 
                     if (
                         self._config.getboolean("containers_stats", "stats_memory") and
@@ -619,7 +628,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["active_anon"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -627,7 +636,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["active_file"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -635,7 +644,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["cache"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -643,7 +652,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["dirty"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -651,7 +660,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["hierarchical_memory_limit"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -659,7 +668,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["hierarchical_memsw_limit"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -667,7 +676,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["inactive_anon"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -675,7 +684,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["inactive_file"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -683,7 +692,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["mapped_file"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -691,7 +700,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["pgfault"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -699,7 +708,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["pgmajfault"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -707,7 +716,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["pgpgin"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -715,7 +724,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["pgpgout"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -723,7 +732,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["rss"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -731,7 +740,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["rss_huge"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -739,7 +748,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["swap"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -747,7 +756,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["unevictable"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -755,7 +764,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["writeback"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -763,7 +772,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["max_usage"]),
-                                container_stats["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -771,7 +780,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["usage"]),
-                                container_stats["clock"]))
+                                clock))
                         # Fix docker 1.13.0
                         if "failcnt" in container_stats["memory_stats"]:
                             metrics.append(
@@ -781,7 +790,7 @@ class DockerContainersStatsService(threading.Thread):
                                         container_name),
                                     "%d" % (
                                         container_stats["memory_stats"]["failcnt"]),
-                                    container_stats["clock"]))
+                                    clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -789,7 +798,7 @@ class DockerContainersStatsService(threading.Thread):
                                     container_name),
                                 "%d" % (
                                     container_stats["memory_stats"]["limit"]),
-                                container_stats["clock"]))
+                                clock))
 
                         if containers_running == 1:
                             metrics.append(
@@ -798,112 +807,112 @@ class DockerContainersStatsService(threading.Thread):
                                     "docker.containers.stats.memory_stats.stats_total_active_anon",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_active_anon"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_active_file",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_active_file"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_cache",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_cache"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_dirty",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_dirty"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_inactive_anon",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_inactive_anon"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_inactive_file",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_inactive_file"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_mapped_file",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_mapped_file"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_pgfault",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_pgfault"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_pgmajfault",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_pgmajfault"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_pgpgout",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_pgpgout"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_pgpgin",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_pgpgin"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_rss",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_rss"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_rss_huge",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_rss_huge"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_swap",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_swap"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_unevictable",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_unevictable"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
                                     "docker.containers.stats.memory_stats.stats_total_writeback",
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_writeback"]),
-                                    container_stats["clock"]))
+                                    clock))
 
                     if (
                         self._config.getboolean("containers_stats", "stats_networks") and
@@ -918,7 +927,7 @@ class DockerContainersStatsService(threading.Thread):
                                         container_stats_network_ifname),
                                     "%d" % (
                                         container_stats["networks"][container_stats_network_ifname]["rx_bytes"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
@@ -927,7 +936,7 @@ class DockerContainersStatsService(threading.Thread):
                                         container_stats_network_ifname),
                                     "%d" % (
                                         container_stats["networks"][container_stats_network_ifname]["rx_dropped"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
@@ -936,7 +945,7 @@ class DockerContainersStatsService(threading.Thread):
                                         container_stats_network_ifname),
                                     "%d" % (
                                         container_stats["networks"][container_stats_network_ifname]["rx_errors"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
@@ -945,7 +954,7 @@ class DockerContainersStatsService(threading.Thread):
                                         container_stats_network_ifname),
                                     "%d" % (
                                         container_stats["networks"][container_stats_network_ifname]["rx_packets"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
@@ -954,7 +963,7 @@ class DockerContainersStatsService(threading.Thread):
                                         container_stats_network_ifname),
                                     "%d" % (
                                         container_stats["networks"][container_stats_network_ifname]["tx_bytes"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
@@ -963,7 +972,7 @@ class DockerContainersStatsService(threading.Thread):
                                         container_stats_network_ifname),
                                     "%d" % (
                                         container_stats["networks"][container_stats_network_ifname]["tx_dropped"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
@@ -972,7 +981,7 @@ class DockerContainersStatsService(threading.Thread):
                                         container_stats_network_ifname),
                                     "%d" % (
                                         container_stats["networks"][container_stats_network_ifname]["tx_errors"]),
-                                    container_stats["clock"]))
+                                    clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
@@ -981,7 +990,7 @@ class DockerContainersStatsService(threading.Thread):
                                         container_stats_network_ifname),
                                     "%d" % (
                                         container_stats["networks"][container_stats_network_ifname]["tx_packets"]),
-                                    container_stats["clock"]))
+                                    clock))
 
                     if (
                         self._config.getboolean("containers_stats", "stats_devices") and
@@ -1000,7 +1009,7 @@ class DockerContainersStatsService(threading.Thread):
                                         container_stats["blkio_stats"]["io_serviced_recursive"][i]["op"]),
                                     "%d" % (
                                         container_stats["blkio_stats"]["io_serviced_recursive"][i]["value"]),
-                                    container_stats["clock"]))
+                                    clock))
 
                         for i in range(len(container_stats["blkio_stats"]["io_service_bytes_recursive"])):
                             metrics.append(
@@ -1013,11 +1022,13 @@ class DockerContainersStatsService(threading.Thread):
                                         container_stats["blkio_stats"]["io_service_bytes_recursive"][i]["op"]),
                                     "%d" % (
                                         container_stats["blkio_stats"]["io_service_bytes_recursive"][i]["value"]),
-                                    container_stats["clock"]))
+                                    clock))
 
             self._logger.debug("sending metrics: %s" % metrics)
             self._zabbix_sender.send(metrics)
         except (IOError, OSError):
+            self._logger.error("failed to send containers statistics metrics")
+
             pass
 
 
@@ -1051,6 +1062,8 @@ class DockerContainersStatsWorker(threading.Thread):
 
                 self._containers_stats[container["Id"]] = data
             except (IOError, OSError):
+                self._logger.error("failed to get statistics metrics for container %s" % container["Id"])
+
                 pass
 
 
@@ -1114,7 +1127,8 @@ class DockerContainersTopService(threading.Thread):
                     self._queue.put(container)
 
                 if container["Id"] in self._containers_top:
-                    container_top = self._containers_top[container["Id"]]
+                    container_top = self._containers_top[container["Id"]]["data"]
+                    clock = self._containers_top[container["Id"]]["clock"]
 
                     for i in range(len(container_top["Processes"])):
                         metrics.append(
@@ -1124,7 +1138,7 @@ class DockerContainersTopService(threading.Thread):
                                     container_name,
                                     container_top["Processes"][i][1]),
                                 "%s" % (container_top["Processes"][i][2]),
-                                container_top["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -1132,7 +1146,7 @@ class DockerContainersTopService(threading.Thread):
                                     container_name,
                                     container_top["Processes"][i][1]),
                                 "%s" % (container_top["Processes"][i][3]),
-                                container_top["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -1140,7 +1154,7 @@ class DockerContainersTopService(threading.Thread):
                                     container_name,
                                     container_top["Processes"][i][1]),
                                 "%s" % (container_top["Processes"][i][4]),
-                                container_top["clock"]))
+                                clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -1148,11 +1162,13 @@ class DockerContainersTopService(threading.Thread):
                                     container_name,
                                     container_top["Processes"][i][1]),
                                 "%s" % (container_top["Processes"][i][5]),
-                                container_top["clock"]))
+                                clock))
 
             self._logger.debug("sending metrics: %s" % metrics)
             self._zabbix_sender.send(metrics)
         except (IOError, OSError):
+            self._logger.error("failed to send containers top metrics")
+
             pass
 
 
@@ -1186,6 +1202,169 @@ class DockerContainersTopWorker(threading.Thread):
 
                 self._containers_top[container["Id"]] = data
             except (IOError, OSError):
+                self._logger.error("failed to get top metrics for container %s" % container["Id"])
+
+                pass
+
+
+class DockerContainersRemoteService(threading.Thread):
+    """This class implements the containers remote service thread"""
+
+    def __init__(self, config, stop_event, docker_client, zabbix_sender):
+        """Initialize the thread"""
+
+        super(DockerContainersRemoteService, self).__init__()
+        self._logger = logging.getLogger(self.__class__.__name__)
+        self._workers = []
+        self._queue = queue.Queue()
+        self._config = config
+        self._stop_event = stop_event
+        self._docker_client = docker_client
+        self._zabbix_sender = zabbix_sender
+        self._containers_outputs = {}
+        self._counter = 0
+        self._lock = threading.Lock()
+
+    def run(self):
+        """Execute the thread"""
+
+        for _ in (range(self._config.getint("containers_remote", "workers"))):
+            worker = DockerContainersRemoteWorker(self._config, self._docker_client, self, self._queue,
+                                                  self._containers_outputs)
+            worker.setDaemon(True)
+            self._workers.append(worker)
+
+        self._logger.info("service started")
+
+        if self._config.getint("containers_remote", "startup") > 0:
+            self._stop_event.wait(self._config.getint("containers_remote", "startup"))
+
+        for worker in self._workers:
+            worker.start()
+
+        while True:
+            self.execute()
+
+            if self._stop_event.wait(self._config.getint("containers_remote", "interval")):
+                break
+
+        self._logger.info("service stopped")
+
+    def execute(self):
+        """Execute the service"""
+
+        with self._lock:
+            if self._counter > self._config.getint("containers_remote", "interval"):
+                self._counter = 0
+
+            self._counter += 1
+
+        self._logger.info("sending available containers trappers metrics")
+
+        try:
+            metrics = []
+
+            containers = self._docker_client.containers()
+
+            for container_id in set(self._containers_outputs) - set(map(lambda c: c["Id"], containers)):
+                del self._containers_outputs[container_id]
+
+            for container in containers:
+                if container["Status"].startswith("Up"):
+                    self._queue.put(container)
+
+                if container["Id"] in self._containers_outputs:
+                    container_output = self._containers_outputs[container["Id"]]["data"]
+                    clock = self._containers_outputs[container["Id"]]["clock"]
+
+                    if self._config.getboolean("containers_remote", "trappers"):
+                        for line in container_output.splitlines():
+                            if self._config.getboolean("containers_remote", "trappers_timestamp"):
+                                m = re.match(r'^([^\s]+){1} (([^\s\[]+){1}(?:\[([^\s]+){1}\])?){1} '
+                                             r'(\d+){1} (?:"?((?:\\.|[^"])+)"?){1}$', line)
+                                if m:
+                                    hostname = self._config.get("zabbix", "host") if m.group(1) == "-" else m.group(1)
+                                    key = m.group(2)
+                                    timestamp = int(m.group(5)) if m.group(5) == int(m.group(5)) else clock
+                                    value = re.sub(r'\\(.)', "\\1", m.group(6))
+
+                                    metrics.append(pyzabbix.ZabbixMetric(hostname, key, value, timestamp))
+                            else:
+                                m = re.match(r'^([^\s]+){1} (([^\s\[]+){1}(?:\[([^\s]+){1}\])?){1} '
+                                             r'(?:"?((?:\\.|[^"])+)"?){1}$', line)
+                                if m:
+                                    hostname = self._config.get("zabbix", "host") if m.group(1) == "-" else m.group(1)
+                                    key = m.group(2)
+                                    timestamp = clock
+                                    value = re.sub(r'\\(.)', "\\1", m.group(5))
+
+                                    metrics.append(pyzabbix.ZabbixMetric(hostname, key, value, timestamp))
+
+            self._logger.debug("sending %d metrics" % len(metrics))
+            self._zabbix_sender.send(metrics)
+        except (IOError, OSError):
+            self._logger.error("failed to send containers trappers metrics")
+
+            pass
+
+    def counter(self):
+        return self._counter
+
+
+class DockerContainersRemoteWorker(threading.Thread):
+    """This class implements a containers remote worker thread"""
+
+    def __init__(self, config, docker_client, containers_remote_service, containers_remote_queue, containers_outputs):
+        """Initialize the thread"""
+
+        super(DockerContainersRemoteWorker, self).__init__()
+        self._logger = logging.getLogger(self.__class__.__name__)
+        self._config = config
+        self._docker_client = docker_client
+        self._containers_remote_service = containers_remote_service
+        self._containers_remote_queue = containers_remote_queue
+        self._containers_outputs = containers_outputs
+
+    def run(self):
+        """Execute the thread"""
+
+        while True:
+            self._logger.debug("waiting execution queue")
+            container = self._containers_remote_queue.get()
+            if container is None:
+                break
+
+            self._logger.info("executing remote command(s) in container %s" % container["Id"])
+
+            try:
+                paths = self._config.get("containers_remote", "path").split(os.pathsep)
+                delays = self._config.get("containers_remote", "delay").split(os.pathsep)
+
+                for index, path in enumerate(paths):
+                    delay = min(int(delays[index]) if ((len(delays) > index) and (int(delays[index]) > 0)) else 1,
+                                int(self._config.get("containers_remote", "interval")))
+
+                    if self._containers_remote_service.counter() % delay != 0:
+                        self._logger.debug("command is delayed to next execution")
+                        continue
+
+                    cmd = self._docker_client.exec_create(
+                        container, "/usr/bin/find %s -type f -maxdepth 1 -perm /700 -exec {} \;" % path, stderr=True,
+                        tty=True, user=self._config.get("containers_remote", "user"))
+
+                    data = self._docker_client.exec_start(cmd)
+
+                    inspect = self._docker_client.exec_inspect(cmd)
+                    if inspect["ExitCode"] == 0:
+                        self._containers_outputs[container["Id"]] = {
+                            "data": str(data, 'utf-8'),
+                            "clock": time.time()
+                        }
+                    else:
+                        self._logger.error("a remote command execution has failed in container %s" % container["Id"])
+            except (IOError, OSError):
+                self._logger.error("failed to execute remote command(s) in container %s" % container["Id"])
+
                 pass
 
 
@@ -1358,9 +1537,11 @@ class DockerEventsPollerWorker(threading.Thread):
                         events_container_destroy,
                         clock))
 
-                self._logger.debug("sending metrics: %s" % metrics)
+                self._logger.debug("sending %d metrics" % len(metrics))
                 self._zabbix_sender.send(metrics)
             except (IOError, OSError):
+                self._logger.error("failed to send events metrics")
+
                 pass
 
 
@@ -1394,17 +1575,26 @@ class Application(object):
         parser = argparse.ArgumentParser(
             description="Discover and send docker metrics to zabbix server")
         parser.add_argument(
+            "--file",
+            help="configuration file to use",
+            metavar="<FILE>"
+        )
+        parser.add_argument(
             "--host",
-            help="custom zabbix host to use",
-            metavar="<HOST>", default=socket.gethostname())
+            help="host to use for sending zabbix metrics",
+            metavar="<HOST>")
         parser.add_argument(
             "--rootfs",
-            help="custom rootfs path to use",
-            metavar="PATH", default="/")
+            help="rootfs path for retrieving system metrics",
+            metavar="PATH",)
         parser.add_argument(
             "--verbose",
-            help="enable verbose output",
-            action="store_true", default=False)
+            action="store_true",
+            help="enable verbose output")
+        parser.add_argument(
+            "--version",
+            action="version",
+            version="zabbix-docker %s" % version.__version__)
 
         args = parser.parse_args()
 
@@ -1417,6 +1607,7 @@ class Application(object):
         containers = yes
         containers_stats = yes
         containers_top = no
+        containers_remote = no
         events = yes
 
         [docker]
@@ -1450,6 +1641,16 @@ class Application(object):
         interval = 60
         workers = 10
 
+        [containers_remote]
+        startup = 30
+        interval = 60
+        workers = 10
+        path = /etc/zabbix/scripts/trapper
+        delay = 1
+        user = root
+        trappers = yes
+        trappers_timestamp = no
+
         [events]
         startup = 5
         interval = 60
@@ -1460,18 +1661,22 @@ class Application(object):
 
         self._config = configparser.ConfigParser()
         self._config.read_string(default_config)
-        self._config.read([
-            '/etc/zabbix-docker/zabbix-docker.conf',
-            os.path.expanduser('~/.zabbix-docker.conf')])
+
+        if "file" in args and args.file:
+            self._config.read(args.file)
+        else:
+            self._config.read([
+                '/etc/zabbix-docker/zabbix-docker.conf',
+                os.path.expanduser('~/.zabbix-docker.conf')])
 
         if "rootfs" in args and args.rootfs:
             self._config.set("main", "rootfs", args.rootfs)
 
-        if "debug" in args and args.debug:
-            self._config.set("main", "debug", "yes" if args.debug else "no")
-
         if "host" in args and args.host:
             self._config.set("zabbix", "host", args.host)
+
+        if self._config.get("zabbix", "host") == "":
+            self._config.set("zabbix", "host", socket.gethostname())
 
         if not self._config.getboolean("main", "debug"):
             logging.basicConfig(level=logging.INFO)
@@ -1516,6 +1721,11 @@ class Application(object):
             containers_top_service = DockerContainersTopService(self._config, self._stop_event, docker_client,
                                                                 zabbix_sender)
             containers_top_service.start()
+
+        if self._config.getboolean("main", "containers_remote"):
+            containers_remote_service = DockerContainersRemoteService(self._config, self._stop_event, docker_client,
+                                                                      zabbix_sender)
+            containers_remote_service.start()
 
         if self._config.getboolean("main", "events"):
             events_service = DockerEventsService(self._config, self._stop_event, docker_client, zabbix_sender,
