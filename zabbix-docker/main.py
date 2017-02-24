@@ -1057,9 +1057,11 @@ class DockerContainersStatsWorker(threading.Thread):
 
             try:
                 data = self._docker_client.stats(container, decode=True, stream=False)
-                data["clock"] = time.time()
 
-                self._containers_stats[container["Id"]] = data
+                self._containers_stats[container["Id"]] = {
+                    "data": data,
+                    "clock": time.time()
+                }
             except (IOError, OSError):
                 self._logger.error("failed to get statistics metrics for container %s" % container["Id"])
 
@@ -1197,9 +1199,11 @@ class DockerContainersTopWorker(threading.Thread):
 
             try:
                 data = self._docker_client.top(container, "aux")
-                data["clock"] = time.time()
 
-                self._containers_top[container["Id"]] = data
+                self._containers_top[container["Id"]] = {
+                    "data": data,
+                    "clock": time.time()
+                }
             except (IOError, OSError):
                 self._logger.error("failed to get top metrics for container %s" % container["Id"])
 
