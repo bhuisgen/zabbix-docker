@@ -224,7 +224,7 @@ class DockerDiscoveryContainersWorker(threading.Thread):
                 self._logger.debug("sending metrics: %s" % metrics)
                 self._zabbix_sender.send(metrics)
             except (IOError, OSError):
-                self._logger.error("Failed to send containers discovery metrics")
+                self._logger.error("failed to send containers discovery metrics")
 
                 pass
 
@@ -435,7 +435,7 @@ class DockerContainersWorker(threading.Thread):
                 self._logger.debug("sending metrics: %s" % metrics)
                 self._zabbix_sender.send(metrics)
             except (IOError, OSError):
-                self._logger.error("Failed to send containers metrics")
+                self._logger.error("failed to send containers metrics")
 
                 pass
 
@@ -1025,7 +1025,7 @@ class DockerContainersStatsService(threading.Thread):
             self._logger.debug("sending metrics: %s" % metrics)
             self._zabbix_sender.send(metrics)
         except (IOError, OSError):
-            self._logger.error("Failed to send containers statistics metrics")
+            self._logger.error("failed to send containers statistics metrics")
 
             pass
 
@@ -1060,7 +1060,7 @@ class DockerContainersStatsWorker(threading.Thread):
 
                 self._containers_stats[container["Id"]] = data
             except (IOError, OSError):
-                self._logger.error("Failed to get statistics metrics for container %s" % container["Id"])
+                self._logger.error("failed to get statistics metrics for container %s" % container["Id"])
 
                 pass
 
@@ -1165,7 +1165,7 @@ class DockerContainersTopService(threading.Thread):
             self._logger.debug("sending metrics: %s" % metrics)
             self._zabbix_sender.send(metrics)
         except (IOError, OSError):
-            self._logger.error("Failed to send containers top metrics")
+            self._logger.error("failed to send containers top metrics")
 
             pass
 
@@ -1200,7 +1200,7 @@ class DockerContainersTopWorker(threading.Thread):
 
                 self._containers_top[container["Id"]] = data
             except (IOError, OSError):
-                self._logger.error("Failed to get top metrics for container %s" % container["Id"])
+                self._logger.error("failed to get top metrics for container %s" % container["Id"])
 
                 pass
 
@@ -1301,7 +1301,7 @@ class DockerContainersRemoteService(threading.Thread):
             self._logger.debug("sending %d metrics" % len(metrics))
             self._zabbix_sender.send(metrics)
         except (IOError, OSError):
-            self._logger.error("Failed to send containers trappers metrics")
+            self._logger.error("failed to send containers trappers metrics")
 
             pass
 
@@ -1535,10 +1535,10 @@ class DockerEventsPollerWorker(threading.Thread):
                         events_container_destroy,
                         clock))
 
-                self._logger.debug("sending metrics: %s" % metrics)
+                self._logger.debug("sending %d metrics" % len(metrics))
                 self._zabbix_sender.send(metrics)
             except (IOError, OSError):
-                self._logger.error("Failed to send events metrics")
+                self._logger.error("failed to send events metrics")
 
                 pass
 
