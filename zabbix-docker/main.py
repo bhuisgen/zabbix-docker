@@ -1352,7 +1352,10 @@ class DockerContainersRemoteWorker(threading.Thread):
                         continue
 
                     cmd = self._docker_client.exec_create(
-                        container, "/usr/bin/find %s -type f -maxdepth 1 -perm /700 -exec {} \;" % path, stderr=True,
+                        container,
+                        "/bin/sh -c \"stat %s >/dev/null 2>&1 && /usr/bin/find %s -type f -maxdepth 1 -perm /700"
+                        " -exec {} \; || /bin/true\"" % (path, path),
+                        stderr=True,
                         tty=True, user=self._config.get("containers_remote", "user"))
 
                     data = self._docker_client.exec_start(cmd)
