@@ -19,7 +19,7 @@ fi
 
 [ -r "${CONFIG_FILE}" ] && . "${CONFIG_FILE}"
 
-script=/etc/zabbix/scripts/$(basename "$0")
+script=/etc/zabbix/discovery/$(basename "$0")
 
 if [ -x "${ZABBIX_SENDER}" ]; then
     if [ ! -z "$ZABBIX_HOST" ]; then
