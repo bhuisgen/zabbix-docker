@@ -18,6 +18,8 @@ from audioop import max
 import docker
 import pyzabbix
 
+import version
+
 
 class DockerDiscoveryService(threading.Thread):
     """This class implements the discovery service which discovers containers and images"""
@@ -1589,6 +1591,10 @@ class Application(object):
             "--verbose",
             action="store_true",
             help="enable verbose output")
+        parser.add_argument(
+            "--version",
+            action="version",
+            version="zabbix-docker %s" % version.__version__)
 
         args = parser.parse_args()
 
@@ -1656,7 +1662,7 @@ class Application(object):
         self._config = configparser.ConfigParser()
         self._config.read_string(default_config)
 
-        if "file" in args:
+        if "file" in args and args.file:
             self._config.read(args.file)
         else:
             self._config.read([
