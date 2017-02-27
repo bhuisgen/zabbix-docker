@@ -1,5 +1,5 @@
-## 0.2 (February 21, 2017)
+## 0.2 (February 27, 2017)
 
-- add remote execution of zabbix trappers
+- add docker remote command execution and parse output for trapper metrics
 
 ## 0.1 (January 18, 2017)
