@@ -105,6 +105,7 @@ class DockerDiscoveryContainersWorker(threading.Thread):
             try:
                 metrics = []
                 discovery_containers = []
+                discovery_containers_stats = []
                 discovery_containers_stats_cpus = []
                 discovery_containers_stats_networks = []
                 discovery_containers_stats_devices = []
@@ -124,6 +125,10 @@ class DockerDiscoveryContainersWorker(threading.Thread):
                     if container["Status"].startswith("Up"):
                         if self._config.getboolean("main", "containers_stats"):
                             container_stats = self._docker_client.stats(container_id, decode=True, stream=False)
+
+                            discovery_containers_stats.append({
+                                "{#NAME}": container_name
+                            })
 
                             if (
                                 "cpu_stats" in container_stats and
@@ -189,6 +194,12 @@ class DockerDiscoveryContainersWorker(threading.Thread):
                         json.dumps({"data": discovery_containers})))
 
                 if self._config.getboolean("main", "containers_stats"):
+                    metrics.append(
+                        pyzabbix.ZabbixMetric(
+                            self._config.get("zabbix", "host"),
+                            "docker.discovery.containers.stats",
+                            json.dumps({"data": discovery_containers_stats})))
+
                     metrics.append(
                         pyzabbix.ZabbixMetric(
                             self._config.get("zabbix", "host"),
