@@ -67,10 +67,6 @@
 #startup = 30                               # startup time (seconds)
 #interval = 60                              # execution interval (seconds)
 #workers = 10                               # number of worker threads
-#stats_cpus = no                            # query containers cpus statistics
-#stats_memory = yes                         # query containers memory statistics
-#stats_networks = yes                       # query containers networks statistics
-#stats_devices = yes                        # query containers block devices statistics
 
 
 #
