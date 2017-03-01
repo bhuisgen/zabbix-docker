@@ -11,7 +11,7 @@ Boris HUISGEN <bhuisgen@hbis.fr>
 ## Configuration
 
     # mkdir -p /etc/zabbix-docker
-    # cp docs/zabbix-docker.conf /etc/zabbix-docker/zabbix-docker.conf
+    # cp docs/zabbix-docker.conf.dist /etc/zabbix-docker/zabbix-docker.conf
     # vim /etc/zabbix-docker/zabbix-docker.conf
 
 ## Running
