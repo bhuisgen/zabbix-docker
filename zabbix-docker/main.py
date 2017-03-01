@@ -126,7 +126,6 @@ class DockerDiscoveryContainersWorker(threading.Thread):
                             container_stats = self._docker_client.stats(container_id, decode=True, stream=False)
 
                             if (
-                                self._config.getboolean("containers_stats", "stats_cpus") and
                                 "cpu_stats" in container_stats and
                                 "cpu_usage" in container_stats["cpu_stats"] and
                                 "percpu_usage" in container_stats["cpu_stats"]["cpu_usage"]
@@ -139,10 +138,7 @@ class DockerDiscoveryContainersWorker(threading.Thread):
                                         "{#CPU}": "%d" % i
                                     })
 
-                            if (
-                                self._config.getboolean("containers_stats", "stats_networks") and
-                                "networks" in container_stats
-                            ):
+                            if "networks" in container_stats:
                                 for container_stats_network_ifname in list(container_stats["networks"].keys()):
                                     discovery_containers_stats_networks.append({
                                         "{#NAME}": container_name,
@@ -150,7 +146,6 @@ class DockerDiscoveryContainersWorker(threading.Thread):
                                     })
 
                             if (
-                                self._config.getboolean("containers_stats", "stats_devices") and
                                 "blkio_stats" in container_stats and
                                 "io_serviced_recursive" in container_stats["blkio_stats"]
                             ):
@@ -194,26 +189,23 @@ class DockerDiscoveryContainersWorker(threading.Thread):
                         json.dumps({"data": discovery_containers})))
 
                 if self._config.getboolean("main", "containers_stats"):
-                    if self._config.getboolean("containers_stats", "stats_cpus"):
-                        metrics.append(
-                            pyzabbix.ZabbixMetric(
-                                self._config.get("zabbix", "host"),
-                                "docker.discovery.containers.stats.cpus",
-                                json.dumps({"data": discovery_containers_stats_cpus})))
+                    metrics.append(
+                        pyzabbix.ZabbixMetric(
+                            self._config.get("zabbix", "host"),
+                            "docker.discovery.containers.stats.cpus",
+                            json.dumps({"data": discovery_containers_stats_cpus})))
 
-                    if self._config.getboolean("containers_stats", "stats_networks"):
-                        metrics.append(
-                            pyzabbix.ZabbixMetric(
-                                self._config.get("zabbix", "host"),
-                                "docker.discovery.containers.stats.networks",
-                                json.dumps({"data": discovery_containers_stats_networks})))
+                    metrics.append(
+                        pyzabbix.ZabbixMetric(
+                            self._config.get("zabbix", "host"),
+                            "docker.discovery.containers.stats.networks",
+                            json.dumps({"data": discovery_containers_stats_networks})))
 
-                    if self._config.getboolean("containers_stats", "stats_devices"):
-                        metrics.append(
-                            pyzabbix.ZabbixMetric(
-                                self._config.get("zabbix", "host"),
-                                "docker.discovery.containers.stats.devices",
-                                json.dumps({"data": discovery_containers_stats_devices})))
+                    metrics.append(
+                        pyzabbix.ZabbixMetric(
+                            self._config.get("zabbix", "host"),
+                            "docker.discovery.containers.stats.devices",
+                            json.dumps({"data": discovery_containers_stats_devices})))
 
                 if self._config.getboolean("main", "containers_top"):
                     metrics.append(
@@ -598,7 +590,6 @@ class DockerContainersStatsService(threading.Thread):
                             clock))
 
                     if (
-                        self._config.getboolean("containers_stats", "stats_cpus") and
                         "cpu_stats" in container_stats and
                         "cpu_usage" in container_stats["cpu_stats"] and
                         "percpu_usage" in container_stats["cpu_stats"]["cpu_usage"]
@@ -618,7 +609,6 @@ class DockerContainersStatsService(threading.Thread):
                                     clock))
 
                     if (
-                        self._config.getboolean("containers_stats", "stats_memory") and
                         "memory_stats" in container_stats and
                         "stats" in container_stats["memory_stats"]
                     ):
@@ -915,10 +905,7 @@ class DockerContainersStatsService(threading.Thread):
                                         container_stats["memory_stats"]["stats"]["total_writeback"]),
                                     clock))
 
-                    if (
-                        self._config.getboolean("containers_stats", "stats_networks") and
-                        'networks' in container_stats
-                    ):
+                    if 'networks' in container_stats:
                         for container_stats_network_ifname in list(container_stats["networks"].keys()):
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
@@ -994,7 +981,6 @@ class DockerContainersStatsService(threading.Thread):
                                     clock))
 
                     if (
-                        self._config.getboolean("containers_stats", "stats_devices") and
                         "blkio_stats" in container_stats and
                         "io_serviced_recursive" in container_stats["blkio_stats"] and
                         "io_service_bytes_recursive" in container_stats["blkio_stats"]
@@ -1637,10 +1623,6 @@ class Application(object):
         startup = 30
         interval = 60
         workers = 10
-        stats_cpus = no
-        stats_memory = yes
-        stats_networks = yes
-        stats_devices = yes
 
         [containers_top]
         startup = 30
