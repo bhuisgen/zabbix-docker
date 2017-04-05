@@ -231,8 +231,6 @@ class DockerDiscoveryContainersWorker(threading.Thread):
             except (IOError, OSError):
                 self._logger.error("failed to send containers discovery metrics")
 
-                pass
-
 
 class DockerDiscoveryContainersEventsPollerWorker(threading.Thread):
     """This class implements a containers discovery by events worker thread"""
@@ -442,8 +440,6 @@ class DockerContainersWorker(threading.Thread):
                     self._zabbix_sender.send(metrics)
             except (IOError, OSError):
                 self._logger.error("failed to send containers metrics")
-
-                pass
 
 
 class DockerContainersStatsService(threading.Thread):
@@ -1028,8 +1024,6 @@ class DockerContainersStatsService(threading.Thread):
         except (IOError, OSError):
             self._logger.error("failed to send containers statistics metrics")
 
-            pass
-
 
 class DockerContainersStatsWorker(threading.Thread):
     """This class implements a containers stats worker thread"""
@@ -1064,8 +1058,6 @@ class DockerContainersStatsWorker(threading.Thread):
                 }
             except (IOError, OSError):
                 self._logger.error("failed to get statistics metrics for container %s" % container["Id"])
-
-                pass
 
 
 class DockerContainersTopService(threading.Thread):
@@ -1171,8 +1163,6 @@ class DockerContainersTopService(threading.Thread):
         except (IOError, OSError):
             self._logger.error("failed to send containers top metrics")
 
-            pass
-
 
 class DockerContainersTopWorker(threading.Thread):
     """This class implements a containers top worker thread"""
@@ -1207,8 +1197,6 @@ class DockerContainersTopWorker(threading.Thread):
                 }
             except (IOError, OSError):
                 self._logger.error("failed to get top metrics for container %s" % container["Id"])
-
-                pass
 
 
 class DockerContainersRemoteService(threading.Thread):
@@ -1284,8 +1272,8 @@ class DockerContainersRemoteService(threading.Thread):
                     if self._config.getboolean("containers_remote", "trappers"):
                         for line in container_output.splitlines():
                             if self._config.getboolean("containers_remote", "trappers_timestamp"):
-                                m = re.match(r'^([^\s]+){1} (([^\s\[]+){1}(?:\[([^\s]+){1}\])?){1} '
-                                             r'(\d+){1} (?:"?((?:\\.|[^"])+)"?){1}$', line)
+                                m = re.match(r'^([^\s]+) (([^\s\[]+)(?:\[([^\s]+)\])?) '
+                                             r'(\d+) (?:"?((?:\\.|[^"])+)"?)$', line)
                                 if m:
                                     hostname = self._config.get("zabbix", "host") if m.group(1) == "-" else m.group(1)
                                     key = m.group(2)
@@ -1294,8 +1282,8 @@ class DockerContainersRemoteService(threading.Thread):
 
                                     metrics.append(pyzabbix.ZabbixMetric(hostname, key, value, timestamp))
                             else:
-                                m = re.match(r'^([^\s]+){1} (([^\s\[]+){1}(?:\[([^\s]+){1}\])?){1} '
-                                             r'(?:"?((?:\\.|[^"])+)"?){1}$', line)
+                                m = re.match(r'^([^\s]+) (([^\s\[]+)(?:\[([^\s]+)\])?) '
+                                             r'(?:"?((?:\\.|[^"])+)"?)$', line)
                                 if m:
                                     hostname = self._config.get("zabbix", "host") if m.group(1) == "-" else m.group(1)
                                     key = m.group(2)
@@ -1559,8 +1547,7 @@ class Application(object):
         if Application._instance is None:
             with Application._lock:
                 if Application._instance is None:
-                    Application._instance = \
-                        super(Application, cls).__new__(cls)
+                    Application._instance = super(Application, cls).__new__(cls)
 
         return Application._instance
 
@@ -1575,7 +1562,7 @@ class Application(object):
         """Start the application """
 
         parser = argparse.ArgumentParser(
-            description="Discover and send docker metrics to zabbix server")
+            description="Discover and send docker metrics to zabbix server.")
         parser.add_argument(
             "--file",
             help="configuration file to use",
