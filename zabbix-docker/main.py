@@ -1329,18 +1329,18 @@ class DockerContainersRemoteWorker(threading.Thread):
 
             self._logger.info("executing remote command(s) in container %s" % container["Id"])
 
-            try:
-                paths = self._config.get("containers_remote", "path").split(os.pathsep)
-                delays = self._config.get("containers_remote", "delay").split(os.pathsep)
+            paths = self._config.get("containers_remote", "path").split(os.pathsep)
+            delays = self._config.get("containers_remote", "delay").split(os.pathsep)
 
-                for index, path in enumerate(paths):
-                    delay = min(int(delays[index]) if ((len(delays) > index) and (int(delays[index]) > 0)) else 1,
-                                int(self._config.get("containers_remote", "interval")))
+            for index, path in enumerate(paths):
+                delay = min(int(delays[index]) if ((len(delays) > index) and (int(delays[index]) > 0)) else 1,
+                            int(self._config.get("containers_remote", "interval")))
 
-                    if self._containers_remote_service.counter() % delay != 0:
-                        self._logger.debug("command is delayed to next execution")
-                        continue
+                if self._containers_remote_service.counter() % delay != 0:
+                    self._logger.debug("command is delayed to next execution")
+                    continue
 
+                try:
                     cmd = self._docker_client.exec_create(
                         container,
                         "/bin/sh -c \"stat %s >/dev/null 2>&1 && /usr/bin/find %s -type f -maxdepth 1 -perm /700"
@@ -1356,12 +1356,8 @@ class DockerContainersRemoteWorker(threading.Thread):
                             "data": str(data, 'utf-8'),
                             "clock": int(time.time())
                         }
-                    else:
-                        self._logger.error("a remote command execution has failed in container %s" % container["Id"])
-            except (IOError, OSError):
-                self._logger.error("failed to execute remote command(s) in container %s" % container["Id"])
-
-                pass
+                except (IOError, OSError):
+                    self._logger.error("failed to execute remote command in container %s" % container["Id"])
 
 
 class DockerEventsService(threading.Thread):
