@@ -1060,7 +1060,7 @@ class DockerContainersStatsWorker(threading.Thread):
 
                 self._containers_stats[container["Id"]] = {
                     "data": data,
-                    "clock": time.time()
+                    "clock": int(time.time())
                 }
             except (IOError, OSError):
                 self._logger.error("failed to get statistics metrics for container %s" % container["Id"])
@@ -1203,7 +1203,7 @@ class DockerContainersTopWorker(threading.Thread):
 
                 self._containers_top[container["Id"]] = {
                     "data": data,
-                    "clock": time.time()
+                    "clock": int(time.time())
                 }
             except (IOError, OSError):
                 self._logger.error("failed to get top metrics for container %s" % container["Id"])
@@ -1366,7 +1366,7 @@ class DockerContainersRemoteWorker(threading.Thread):
                     if inspect["ExitCode"] == 0:
                         self._containers_outputs[container["Id"]] = {
                             "data": str(data, 'utf-8'),
-                            "clock": time.time()
+                            "clock": int(time.time())
                         }
                     else:
                         self._logger.error("a remote command execution has failed in container %s" % container["Id"])
@@ -1487,7 +1487,7 @@ class DockerEventsPollerWorker(threading.Thread):
                         events_container_destroy += 1
 
                 metrics = []
-                clock = time.time()
+                clock = int(time.time())
 
                 metrics.append(
                     pyzabbix.ZabbixMetric(
