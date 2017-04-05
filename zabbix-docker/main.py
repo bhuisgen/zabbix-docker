@@ -231,8 +231,6 @@ class DockerDiscoveryContainersWorker(threading.Thread):
             except (IOError, OSError):
                 self._logger.error("failed to send containers discovery metrics")
 
-                pass
-
 
 class DockerDiscoveryContainersEventsPollerWorker(threading.Thread):
     """This class implements a containers discovery by events worker thread"""
@@ -442,8 +440,6 @@ class DockerContainersWorker(threading.Thread):
                     self._zabbix_sender.send(metrics)
             except (IOError, OSError):
                 self._logger.error("failed to send containers metrics")
-
-                pass
 
 
 class DockerContainersStatsService(threading.Thread):
@@ -1028,8 +1024,6 @@ class DockerContainersStatsService(threading.Thread):
         except (IOError, OSError):
             self._logger.error("failed to send containers statistics metrics")
 
-            pass
-
 
 class DockerContainersStatsWorker(threading.Thread):
     """This class implements a containers stats worker thread"""
@@ -1060,12 +1054,10 @@ class DockerContainersStatsWorker(threading.Thread):
 
                 self._containers_stats[container["Id"]] = {
                     "data": data,
-                    "clock": time.time()
+                    "clock": int(time.time())
                 }
             except (IOError, OSError):
                 self._logger.error("failed to get statistics metrics for container %s" % container["Id"])
-
-                pass
 
 
 class DockerContainersTopService(threading.Thread):
@@ -1171,8 +1163,6 @@ class DockerContainersTopService(threading.Thread):
         except (IOError, OSError):
             self._logger.error("failed to send containers top metrics")
 
-            pass
-
 
 class DockerContainersTopWorker(threading.Thread):
     """This class implements a containers top worker thread"""
@@ -1203,12 +1193,10 @@ class DockerContainersTopWorker(threading.Thread):
 
                 self._containers_top[container["Id"]] = {
                     "data": data,
-                    "clock": time.time()
+                    "clock": int(time.time())
                 }
             except (IOError, OSError):
                 self._logger.error("failed to get top metrics for container %s" % container["Id"])
-
-                pass
 
 
 class DockerContainersRemoteService(threading.Thread):
@@ -1284,8 +1272,8 @@ class DockerContainersRemoteService(threading.Thread):
                     if self._config.getboolean("containers_remote", "trappers"):
                         for line in container_output.splitlines():
                             if self._config.getboolean("containers_remote", "trappers_timestamp"):
-                                m = re.match(r'^([^\s]+){1} (([^\s\[]+){1}(?:\[([^\s]+){1}\])?){1} '
-                                             r'(\d+){1} (?:"?((?:\\.|[^"])+)"?){1}$', line)
+                                m = re.match(r'^([^\s]+) (([^\s\[]+)(?:\[([^\s]+)\])?) '
+                                             r'(\d+) (?:"?((?:\\.|[^"])+)"?)$', line)
                                 if m:
                                     hostname = self._config.get("zabbix", "host") if m.group(1) == "-" else m.group(1)
                                     key = m.group(2)
@@ -1294,8 +1282,8 @@ class DockerContainersRemoteService(threading.Thread):
 
                                     metrics.append(pyzabbix.ZabbixMetric(hostname, key, value, timestamp))
                             else:
-                                m = re.match(r'^([^\s]+){1} (([^\s\[]+){1}(?:\[([^\s]+){1}\])?){1} '
-                                             r'(?:"?((?:\\.|[^"])+)"?){1}$', line)
+                                m = re.match(r'^([^\s]+) (([^\s\[]+)(?:\[([^\s]+)\])?) '
+                                             r'(?:"?((?:\\.|[^"])+)"?)$', line)
                                 if m:
                                     hostname = self._config.get("zabbix", "host") if m.group(1) == "-" else m.group(1)
                                     key = m.group(2)
@@ -1341,18 +1329,18 @@ class DockerContainersRemoteWorker(threading.Thread):
 
             self._logger.info("executing remote command(s) in container %s" % container["Id"])
 
-            try:
-                paths = self._config.get("containers_remote", "path").split(os.pathsep)
-                delays = self._config.get("containers_remote", "delay").split(os.pathsep)
+            paths = self._config.get("containers_remote", "path").split(os.pathsep)
+            delays = self._config.get("containers_remote", "delay").split(os.pathsep)
 
-                for index, path in enumerate(paths):
-                    delay = min(int(delays[index]) if ((len(delays) > index) and (int(delays[index]) > 0)) else 1,
-                                int(self._config.get("containers_remote", "interval")))
+            for index, path in enumerate(paths):
+                delay = min(int(delays[index]) if ((len(delays) > index) and (int(delays[index]) > 0)) else 1,
+                            int(self._config.get("containers_remote", "interval")))
 
-                    if self._containers_remote_service.counter() % delay != 0:
-                        self._logger.debug("command is delayed to next execution")
-                        continue
+                if self._containers_remote_service.counter() % delay != 0:
+                    self._logger.debug("command is delayed to next execution")
+                    continue
 
+                try:
                     cmd = self._docker_client.exec_create(
                         container,
                         "/bin/sh -c \"stat %s >/dev/null 2>&1 && /usr/bin/find %s -type f -maxdepth 1 -perm /700"
@@ -1366,14 +1354,10 @@ class DockerContainersRemoteWorker(threading.Thread):
                     if inspect["ExitCode"] == 0:
                         self._containers_outputs[container["Id"]] = {
                             "data": str(data, 'utf-8'),
-                            "clock": time.time()
+                            "clock": int(time.time())
                         }
-                    else:
-                        self._logger.error("a remote command execution has failed in container %s" % container["Id"])
-            except (IOError, OSError):
-                self._logger.error("failed to execute remote command(s) in container %s" % container["Id"])
-
-                pass
+                except (IOError, OSError):
+                    self._logger.error("failed to execute remote command in container %s" % container["Id"])
 
 
 class DockerEventsService(threading.Thread):
@@ -1487,7 +1471,7 @@ class DockerEventsPollerWorker(threading.Thread):
                         events_container_destroy += 1
 
                 metrics = []
-                clock = time.time()
+                clock = int(time.time())
 
                 metrics.append(
                     pyzabbix.ZabbixMetric(
@@ -1559,8 +1543,7 @@ class Application(object):
         if Application._instance is None:
             with Application._lock:
                 if Application._instance is None:
-                    Application._instance = \
-                        super(Application, cls).__new__(cls)
+                    Application._instance = super(Application, cls).__new__(cls)
 
         return Application._instance
 
@@ -1575,7 +1558,7 @@ class Application(object):
         """Start the application """
 
         parser = argparse.ArgumentParser(
-            description="Discover and send docker metrics to zabbix server")
+            description="Discover and send docker metrics to zabbix server.")
         parser.add_argument(
             "--file",
             help="configuration file to use",

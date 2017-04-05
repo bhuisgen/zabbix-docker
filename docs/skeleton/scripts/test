@@ -1,6 +1,11 @@
 #!/usr/bin/env sh
 set -e
 
+if [ -z "${CONFIG_FILE}" ]; then
+    CONFIG_FILE=/etc/zabbix/scripts/trapper/$(basename "$0").conf
+fi
+[ -r "${CONFIG_FILE}" ] && . "${CONFIG_FILE}"
+
 echo "- test[1] 1"
 echo "- test[2] 2"
 echo "- test[3] 3"

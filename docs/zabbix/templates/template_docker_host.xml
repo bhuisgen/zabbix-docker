@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>3.2</version>
-    <date>2017-03-01T13:10:01Z</date>
+    <date>2017-03-02T15:35:55Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -2346,7 +2346,7 @@
                             </condition>
                             <condition>
                                 <macro>{#IFNAME}</macro>
-                                <value>@Docker interfaces for discovery</value>
+                                <value>@Docker network interfaces for discovery</value>
                                 <operator>8</operator>
                                 <formulaid>A</formulaid>
                             </condition>
@@ -2530,7 +2530,7 @@
                             </condition>
                             <condition>
                                 <macro>{#FSNAME}</macro>
-                                <value>@Docker mounts for discovery</value>
+                                <value>@Docker mount points for discovery</value>
                                 <operator>8</operator>
                                 <formulaid>A</formulaid>
                             </condition>
@@ -3304,7 +3304,7 @@
             <tags/>
         </trigger>
         <trigger>
-            <expression>{Custom Template Docker Host:proc.num[].avg(5m)}&gt;{Custom Template Docker Host:host.fd.current.avg(5m)}&gt;{$HOST.TOO_MANY_PROCESS}</expression>
+            <expression>{Custom Template Docker Host:proc.num[].avg(5m)}&gt;{$HOST.TOO_MANY_PROCESS}</expression>
             <recovery_mode>0</recovery_mode>
             <recovery_expression/>
             <name>Too many processes on {HOST.NAME}</name>
