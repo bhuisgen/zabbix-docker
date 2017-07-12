@@ -659,14 +659,15 @@ class DockerContainersStatsService(threading.Thread):
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["hierarchical_memory_limit"]),
                                 clock))
-                        metrics.append(
-                            pyzabbix.ZabbixMetric(
-                                self._config.get("zabbix", "host"),
-                                "docker.containers.stats.memory_stats.stats_hierarchical_memsw_limit[%s]" % (
-                                    container_name),
-                                "%d" % (
-                                    container_stats["memory_stats"]["stats"]["hierarchical_memsw_limit"]),
-                                clock))
+                        if "hierarchical_memsw_limit" in container_stats["memory_stats"]["stats"]:
+                            metrics.append(
+                                pyzabbix.ZabbixMetric(
+                                    self._config.get("zabbix", "host"),
+                                    "docker.containers.stats.memory_stats.stats_hierarchical_memsw_limit[%s]" % (
+                                        container_name),
+                                    "%d" % (
+                                        container_stats["memory_stats"]["stats"]["hierarchical_memsw_limit"]),
+                                    clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -739,14 +740,15 @@ class DockerContainersStatsService(threading.Thread):
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["rss_huge"]),
                                 clock))
-                        metrics.append(
-                            pyzabbix.ZabbixMetric(
-                                self._config.get("zabbix", "host"),
-                                "docker.containers.stats.memory_stats.stats_swap[%s]" % (
-                                    container_name),
-                                "%d" % (
-                                    container_stats["memory_stats"]["stats"]["swap"]),
-                                clock))
+                        if "swap" in container_stats["memory_stats"]["stats"]:
+                            metrics.append(
+                                pyzabbix.ZabbixMetric(
+                                    self._config.get("zabbix", "host"),
+                                    "docker.containers.stats.memory_stats.stats_swap[%s]" % (
+                                        container_name),
+                                    "%d" % (
+                                        container_stats["memory_stats"]["stats"]["swap"]),
+                                    clock))
                         metrics.append(
                             pyzabbix.ZabbixMetric(
                                 self._config.get("zabbix", "host"),
@@ -779,7 +781,6 @@ class DockerContainersStatsService(threading.Thread):
                                 "%d" % (
                                     container_stats["memory_stats"]["usage"]),
                                 clock))
-                        # Fix docker 1.13.0
                         if "failcnt" in container_stats["memory_stats"]:
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
