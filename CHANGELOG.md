@@ -1,3 +1,7 @@
+## 0.2.3 (July 12, 2017)
+
+- fix swap metrics sending
+
 ## 0.2.2 (July 12, 2017)
 
 - fix memory metrics sending
