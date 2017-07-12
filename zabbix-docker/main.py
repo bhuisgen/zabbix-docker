@@ -891,13 +891,14 @@ class DockerContainersStatsService(threading.Thread):
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_rss_huge"]),
                                     clock))
-                            metrics.append(
-                                pyzabbix.ZabbixMetric(
-                                    self._config.get("zabbix", "host"),
-                                    "docker.containers.stats.memory_stats.stats_total_swap",
-                                    "%d" % (
-                                        container_stats["memory_stats"]["stats"]["total_swap"]),
-                                    clock))
+                            if "total_swap" in container_stats["memory_stats"]["stats"]:
+                                metrics.append(
+                                    pyzabbix.ZabbixMetric(
+                                        self._config.get("zabbix", "host"),
+                                        "docker.containers.stats.memory_stats.stats_total_swap",
+                                        "%d" % (
+                                            container_stats["memory_stats"]["stats"]["total_swap"]),
+                                        clock))
                             metrics.append(
                                 pyzabbix.ZabbixMetric(
                                     self._config.get("zabbix", "host"),
