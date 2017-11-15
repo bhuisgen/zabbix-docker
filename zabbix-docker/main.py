@@ -1659,7 +1659,7 @@ class Application(object):
         if self._config.get("zabbix", "host") == "":
             self._config.set("zabbix", "host", socket.gethostname())
 
-        if not self._config.getboolean("main", "log") == "yes":
+        if self._config.getboolean("main", "log") == "yes":
             if self._config.get("main", "log_level") == "error":
                 level = logging.ERROR
             elif self._config.get("main", "log_level") == "warning":
