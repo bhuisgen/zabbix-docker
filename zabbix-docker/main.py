@@ -16,6 +16,7 @@ import time
 
 import docker
 import pyzabbix
+import xdg
 
 import version
 
@@ -1647,8 +1648,9 @@ class Application(object):
             self._config.read(args.file)
         else:
             self._config.read([
-                '/etc/zabbix-docker/zabbix-docker.conf',
-                os.path.expanduser('~/.zabbix-docker.conf')])
+                "/etc/zabbix-docker/zabbix-docker.conf",
+                "%s/zabbix-docker/zabbix-docker.conf" % xdg.XDG_CONFIG_HOME
+            ])
 
         if "rootfs" in args and args.rootfs:
             self._config.set("main", "rootfs", args.rootfs)
