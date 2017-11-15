@@ -1,3 +1,8 @@
+## 0.2.5 (November 15, 2017)
+
+- update bin scripts to use python package
+- fix CLI usage
+
 ## 0.2.4 (November 15, 2017)
 
 - use xdg variable for user config file
