@@ -18,7 +18,7 @@ import docker
 import pyzabbix
 import xdg
 
-import version
+from . import version
 
 
 class DockerDiscoveryService(threading.Thread):
@@ -1560,30 +1560,13 @@ class Application(object):
     def run(self):
         """Start the application """
 
-        parser = argparse.ArgumentParser(
-            description="Discover and send docker metrics to zabbix server.")
-        parser.add_argument(
-            "--file",
-            help="configuration file to use",
-            metavar="<FILE>"
-        )
-        parser.add_argument(
-            "--host",
-            help="host to use for sending zabbix metrics",
-            metavar="<HOST>")
-        parser.add_argument(
-            "--rootfs",
-            help="rootfs path for retrieving system metrics",
-            metavar="PATH",)
-        parser.add_argument(
-            "--verbose",
-            action="store_true",
-            help="enable verbose output")
-        parser.add_argument(
-            "--version",
-            action="version",
-            version="zabbix-docker %s" % version.__version__)
-
+        parser = argparse.ArgumentParser(prog="zabbix-docker",
+                                         description="Discover and send docker metrics to zabbix server.")
+        parser.add_argument("--file", help="configuration file to use", metavar="<FILE>")
+        parser.add_argument("--host", help="host to use for sending zabbix metrics", metavar="<HOST>")
+        parser.add_argument("--rootfs", help="rootfs path for retrieving system metrics", metavar="PATH")
+        parser.add_argument("--verbose", action="store_true", help="enable verbose output")
+        parser.add_argument("--version", action="version", version="zabbix-docker %s" % version.__version__)
         args = parser.parse_args()
 
         default_config = """\
