@@ -18,7 +18,7 @@ import docker
 import pyzabbix
 import xdg
 
-import version
+from . import version
 
 
 class DockerDiscoveryService(threading.Thread):
