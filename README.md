@@ -6,8 +6,8 @@ Boris HUISGEN <bhuisgen@hbis.fr>
 
 ## Introduction
 
-Zabbix-docker is a daemon to retrieve docker metrics from the running host where it runs and to send them to a Zabbix
-server or proxy.
+Zabbix-docker is an agent which monitors the local docker engine, gets his metrics and sends them to a Zabbix server or
+proxy.
 
 ## Setup
 
@@ -22,7 +22,6 @@ Create the configuration file and configure it:
     # mkdir -p /etc/zabbix-docker
     # cp docs/zabbix-docker.conf.dist /etc/zabbix-docker/zabbix-docker.conf
     # vim /etc/zabbix-docker/zabbix-docker.conf
-
 
 ## Running
 
