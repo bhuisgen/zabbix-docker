@@ -1672,7 +1672,7 @@ class Application(object):
         signal.signal(signal.SIGTERM, self.exit_handler)
 
         self._logger.debug("creating docker client")
-        docker_client = docker.Client(
+        docker_client = docker.APIClient(
             base_url=self._config.get("docker", "base_url"),
             timeout=self._config.getint("docker", "timeout")
         )
