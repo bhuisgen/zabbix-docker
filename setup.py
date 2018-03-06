@@ -32,7 +32,7 @@ config = {
     "download_url": "https://github.com/bhuisgen/zabbix-docker",
     "packages": ["zabbix-docker"],
     "scripts": [],
-    "install_requires": ["docker-py", "py-zabbix", "xdg"]
+    "install_requires": ["docker", "py-zabbix", "xdg"]
 }
 
 setup(**config)

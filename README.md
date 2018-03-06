@@ -29,7 +29,6 @@ You can run the agent:
 
     # ./bin/zabbix-docker
 
-
 ### Zabbix server
 
 #### Templates
@@ -44,28 +43,18 @@ You need to import all templates from *docs/zabbix/templates* directory:
 
 Some global regular expressions must be created to customize metrics discoveries:
 
-* Docker mount points for discovery
-
-Expression: ^/etc [Result is FALSE]
+* Docker mount points for discovery: Expression type: [Result is FALSE], Expression: ^/etc 
 
 This is necesseray to exclude all mounts binded by Docker.
 
-* Docker network interfaces for discovery
-
-Expression: ^veth [Result is FALSE]
+* Docker network interfaces for discovery: Expression type: [Result is FALSE] Expression: ^veth
 
 This is necesseray to exclude all host network interfaces managed by Docker.
 
-* Docker container names for discovery
+* Docker container names for discovery: Expression type: [Result is TRUE] Expression: .+
 
-Expression: .+ [Result is TRUE]
+You can exclude some named containers.
 
-You can exclude some containers.
-
-* Docker container process names for discovery
-
-Expression: .+ [Result is TRUE]
+* Docker container process names for discovery: Expression type: [Result is TRUE] Expression: .+
 
 You can exclude some container processes.
-
-
