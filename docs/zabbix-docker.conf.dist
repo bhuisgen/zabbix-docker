@@ -33,7 +33,13 @@
 
 [zabbix]
 
-#host =                                     # zabbix host of metrics
+#server =                                   # zabbix server to send metrics (HOST:PORT)
+                                            #
+                                            # By default use the value in /etc/zabbix/zabbix_agentd.conf.
+                                            #
+#hostname =                                 # hostname of sended metrics.
+                                            #
+                                            # By default use the system hostname.
 
 
 #

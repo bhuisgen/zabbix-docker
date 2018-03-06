@@ -16,7 +16,8 @@ events = yes
 #timeout = 5
 
 [zabbix]
-host = zabbix-agent
+#server =
+#hostname =
 
 [discovery]
 #startup = 15
