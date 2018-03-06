@@ -1565,6 +1565,7 @@ class Application(object):
         parser.add_argument("--file", help="configuration file to use", metavar="<FILE>")
         parser.add_argument("--host", help="host to use for sending zabbix metrics", metavar="<HOST>")
         parser.add_argument("--rootfs", help="rootfs path for retrieving system metrics", metavar="PATH")
+        parser.add_argument("--server", help="Zabbix server to send metrics", metavar="<HOST>")
         parser.add_argument("--verbose", action="store_true", help="enable verbose output")
         parser.add_argument("--version", action="version", version="zabbix-docker %s" % version.__version__)
         args = parser.parse_args()
@@ -1588,6 +1589,7 @@ class Application(object):
 
         [zabbix]
         host =
+        server =
 
         [discovery]
         startup = 15
@@ -1643,6 +1645,8 @@ class Application(object):
 
         if self._config.get("zabbix", "host") == "":
             self._config.set("zabbix", "host", socket.gethostname())
+        if "server" in args and args.server:
+            self._config.set("zabbix", "server", args.server)
 
         if self._config.getboolean("main", "log") == "yes":
             if self._config.get("main", "log_level") == "error":
@@ -1676,7 +1680,19 @@ class Application(object):
         )
 
         self._logger.debug("creating zabbix sender client")
-        zabbix_sender = pyzabbix.ZabbixSender(use_config=True)
+
+        if self._config.get("zabbix", "server") != "":
+            serverport = self._config.get("zabbix", "server").split(":")
+            if ':' not in serverport:
+                server = serverport
+                port = 10051
+            else:
+                server = serverport[0]
+                port = int(serverport[1])
+
+            zabbix_sender = pyzabbix.ZabbixSender(zabbix_server=server, zabbix_port=port)
+        else:
+            zabbix_sender = pyzabbix.ZabbixSender(use_config=True)
 
         self._logger.info("starting services")
 
