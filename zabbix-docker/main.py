@@ -1590,8 +1590,6 @@ class Application(object):
         timeout = 5
 
         [zabbix]
-        server =
-        hostname =
 
         [discovery]
         startup = 15
@@ -1642,13 +1640,13 @@ class Application(object):
         if "rootfs" in args and args.rootfs:
             self._config.set("main", "rootfs", args.rootfs)
 
-        if "hostname" in args and args.hostname:
-            self._config.set("zabbix", "hostname", args.hostname)
-
         if "server" in args and args.server:
             self._config.set("zabbix", "server", args.server)
 
-        if self._config.getboolean("main", "log") == "yes":
+        if "hostname" in args and args.hostname:
+            self._config.set("zabbix", "hostname", args.hostname)
+
+        if self._config.getboolean("main", "log"):
             if self._config.get("main", "log_level") == "error":
                 level = logging.ERROR
             elif self._config.get("main", "log_level") == "warning":
@@ -1662,8 +1660,8 @@ class Application(object):
 
             logging.basicConfig(level=level)
             if level == logging.DEBUG:
-                logging.getLogger("docker").setLevel(logging.INFO)
-                logging.getLogger("pyzabbix").setLevel(logging.INFO)
+                logging.getLogger("docker").setLevel(logging.DEBUG)
+                logging.getLogger("pyzabbix").setLevel(logging.DEBUG)
                 logging.getLogger("requests").setLevel(logging.WARNING)
                 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
@@ -1681,10 +1679,10 @@ class Application(object):
 
         self._logger.debug("creating zabbix sender client")
 
-        if self._config.get("zabbix", "server") != "":
+        if self._config.has_option("zabbix", "server"):
             serverport = self._config.get("zabbix", "server").split(":")
             if ':' not in serverport:
-                server = serverport
+                server = serverport[0]
                 port = 10051
             else:
                 server = serverport[0]
@@ -1694,7 +1692,7 @@ class Application(object):
         else:
             zabbix_sender = pyzabbix.ZabbixSender(use_config=True)
 
-        if self._config.get("zabbix", "hostname") != "":
+        if not self._config.has_option("zabbix", "hostname"):
             self._config.set("zabbix", "hostname", socket.gethostname())
 
         self._logger.info("starting services")
