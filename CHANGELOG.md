@@ -1,6 +1,6 @@
-## CURRENT
+## 0.3.0 (2018-03-06)
 
-- use latest docker SDK
+- use docker SDK 3.1.1
 - add zabbix server option
 - rename host option to hostname
 - fix logging
