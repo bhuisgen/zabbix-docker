@@ -1569,7 +1569,7 @@ class Application(object):
         parser.add_argument("--server", help="Zabbix server to send metrics", metavar="<HOST>")
         parser.add_argument("--hostname", help="Zabbix hostname of sended metrics", metavar="<HOST>")
         parser.add_argument("--verbose", action="store_true", help="enable verbose output")
-        parser.add_argument("--version", action="version", version="zabbix-docker %s" % version.__version__)
+        parser.add_argument("-v", "--version", action="version", version="zabbix-docker %s" % version.__version__)
         args = parser.parse_args()
 
         default_config = """\
