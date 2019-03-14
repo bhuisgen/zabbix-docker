@@ -27,13 +27,13 @@ def find_version(*file_paths):
 
 config = {
     "name": "zabbix-docker",
-    "version": find_version("zabbix-docker", "version.py"),
-    "description": "docker monitoring for zabbix",
+    "version": find_version("zabbixdocker", "version.py"),
+    "description": "Docker monitoring agent for Zabbix",
     "author": "Boris HUISGEN",
     "author_email": "bhuisgen@hbis.fr",
     "url": "https://github.com/bhuisgen/zabbix-docker",
     "download_url": "https://github.com/bhuisgen/zabbix-docker",
-    "packages": ["zabbix-docker"],
+    "packages": ["zabbixdocker"],
     "scripts": [],
     "install_requires": ["docker", "py-zabbix", "xdg"]
 }

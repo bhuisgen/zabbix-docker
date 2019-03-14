@@ -1,2 +1,2 @@
 @Echo OFF
-python3 -m zabbix-docker.main %*
+python3 -m zabbixdocker.main %*
