@@ -71,7 +71,6 @@ class DockerEventsPollerWorker(threading.Thread):
     def run(self):
         """Execute the thread"""
 
-        since = None
         until = datetime.datetime.utcnow() - datetime.timedelta(seconds=1)
 
         while True:

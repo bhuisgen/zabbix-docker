@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 
-if [ -z "${CONFIG_FILE}" ]; then
+if [[ -z "${CONFIG_FILE}" ]]; then
     CONFIG_FILE=/etc/zabbix/scripts/trapper/$(basename "$0").conf
 fi
-[ -r "${CONFIG_FILE}" ] && . "${CONFIG_FILE}"
+[[ -r "${CONFIG_FILE}" ]] && . "${CONFIG_FILE}"
 
 for i in $(seq 0 4); do
    DATA="$DATA,"'{\"{#NAME}\":\"'$i'\"}'

@@ -27,21 +27,23 @@ class Application(object):
     _lock = threading.Lock()
 
     def __new__(cls):
-        """Create the application instance singleton"""
-
+        """Create the instance singleton"""
         if Application._instance is None:
             with Application._lock:
                 if Application._instance is None:
                     Application._instance = super(Application, cls).__new__(cls)
+                    Application._instance.initialized = False
 
         return Application._instance
 
     def __init__(self):
-        """Initialize the application instance"""
+        """Initialize the instance"""
+        if self._initialized is False:
+            self._logger = logging.getLogger(self.__class__.__name__)
+            self._stop_event = threading.Event()
+            self._config = None
 
-        self._logger = logging.getLogger(self.__class__.__name__)
-        self._stop_event = threading.Event()
-        self._config = None
+            self._initialized = True
 
     def run(self):
         """Start the application """

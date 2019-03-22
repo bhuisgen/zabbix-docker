@@ -238,7 +238,6 @@ class DockerDiscoveryContainersEventsPollerWorker(threading.Thread):
     def run(self):
         """Execute the thread"""
 
-        since = None
         until = None
 
         while True:
