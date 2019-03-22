@@ -21,7 +21,7 @@ for line in $(cat /proc/diskstats); do
     diskdev="/dev/$disk"
     diskname="$disk"
 
-    if [ -e $dmnamefile ]; then
+    if [[ -e $dmnamefile ]]; then
         diskdev="/dev/mapper/$dmname"
         diskname=$(cat $dmnamefile)
     fi
