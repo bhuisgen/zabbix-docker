@@ -32,7 +32,7 @@ class Application(object):
             with Application._lock:
                 if Application._instance is None:
                     Application._instance = super(Application, cls).__new__(cls)
-                    Application._instance.initialized = False
+                    Application._instance._initialized = False
 
         return Application._instance
 
