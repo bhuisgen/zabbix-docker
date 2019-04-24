@@ -154,8 +154,8 @@ class Application(object):
         self._logger.info("starting application")
 
         self._logger.debug("registering signal handlers")
-        signal.signal(signal.SIGINT, self.exit_handler)
-        signal.signal(signal.SIGTERM, self.exit_handler)
+        signal.signal(signal.SIGINT, self._exit_handler)
+        signal.signal(signal.SIGTERM, self._exit_handler)
 
         self._logger.debug("creating docker client")
         docker_client = docker.APIClient(
@@ -220,7 +220,7 @@ class Application(object):
 
         sys.exit(0)
 
-    def exit_handler(self, signum, frame):
+    def _exit_handler(self, signum, frame):
         """Handle the request signal to exit the application"""
 
         self._logger.info("signal %d received, exiting" % signum)

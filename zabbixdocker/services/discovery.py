@@ -49,14 +49,14 @@ class DockerDiscoveryService(threading.Thread):
             worker.start()
 
         while True:
-            self.execute_containers_discovery()
+            self._execute()
 
             if self._stop_event.wait(self._config.getint("discovery", "interval")):
                 break
 
         self._logger.info("service stopped")
 
-    def execute(self):
+    def _execute(self):
         """Execute the service"""
 
         self._logger.debug("requesting discovery")

@@ -41,14 +41,14 @@ class DockerContainersService(threading.Thread):
             worker.start()
 
         while True:
-            self.execute()
+            self._execute()
 
             if self._stop_event.wait(self._config.getint("containers", "interval")):
                 break
 
         self._logger.info("service stopped")
 
-    def execute(self):
+    def _execute(self):
         """Execute the service"""
 
         self._logger.debug("requesting containers metrics")
@@ -209,14 +209,14 @@ class DockerContainersStatsService(threading.Thread):
             worker.start()
 
         while True:
-            self.execute()
+            self._execute()
 
             if self._stop_event.wait(self._config.getint("containers_stats", "interval")):
                 break
 
         self._logger.info("service stopped")
 
-    def execute(self):
+    def _execute(self):
         """Execute the service"""
 
         self._logger.info("sending available containers statistics metrics")
@@ -831,14 +831,14 @@ class DockerContainersTopService(threading.Thread):
             worker.start()
 
         while True:
-            self.execute()
+            self._execute()
 
             if self._stop_event.wait(self._config.getint("containers_top", "interval")):
                 break
 
         self._logger.info("service stopped")
 
-    def execute(self):
+    def _execute(self):
         """Execute the service"""
 
         self._logger.info("sending available containers top metrics")
@@ -973,14 +973,14 @@ class DockerContainersRemoteService(threading.Thread):
             worker.start()
 
         while True:
-            self.execute()
+            self._execute()
 
             if self._stop_event.wait(self._config.getint("containers_remote", "interval")):
                 break
 
         self._logger.info("service stopped")
 
-    def execute(self):
+    def _execute(self):
         """Execute the service"""
 
         with self._lock:

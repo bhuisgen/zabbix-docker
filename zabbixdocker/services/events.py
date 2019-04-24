@@ -41,14 +41,14 @@ class DockerEventsService(threading.Thread):
             worker.start()
 
         while True:
-            self.execute()
+            self._execute()
 
             if self._stop_event.wait(self._config.getint("events", "interval")):
                 break
 
         self._logger.info("service stopped")
 
-    def execute(self):
+    def _execute(self):
         """Execute the service"""
 
         self._logger.debug("requesting service execution")
@@ -177,4 +177,3 @@ class DockerEventsPollerWorker(threading.Thread):
                 self._logger.error("failed to send events metrics")
 
                 pass
-
