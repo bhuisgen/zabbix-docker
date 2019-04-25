@@ -10,11 +10,12 @@
 #log = yes                                  # enable log messages
 #log_level = error                          # log level (error/warning/info/debug)
 #rootfs = /                                 # path to the docker host rootfs
-#containers = yes                           # enable querying of containers metrics
-#containers_stats = yes                     # enable querying of containers statistics metrics
-#containers_top = no                        # enable querying of containers processes metrics
+#services = yes                             # enable services metrics
+#containers = yes                           # enable containers metrics
+#containers_stats = yes                     # enable containers statistics metrics
+#containers_top = no                        # enable containers processes metrics
 #containers_remote = no                     # enable execution of remote commands inside containers
-#events = yes                               # enable querying of docker events
+#events = yes                               # enable docker events
 
 
 #
@@ -37,10 +38,13 @@
                                             #
                                             # By default use the value in /etc/zabbix/zabbix_agentd.conf.
                                             #
-#hostname =                                 # hostname of sended metrics.
+#hostname =                                 # hostname to send metrics.
                                             #
                                             # By default use the system hostname.
-
+                                            #
+#hostname_cluster =                         # hostname to send cluster metrics.
+                                            #
+                                            # This option is required to monitor cluster metrics.
 
 #
 # Docker containers discovery service
@@ -53,6 +57,14 @@
 #poll_events = yes                          # poll docker events for containers discovery
 #poll_events_interval = 15                  # poll interval
 
+#
+# Docker services metrics
+#
+
+[services]
+
+#startup = 15                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
 
 #
 # Docker containers metrics

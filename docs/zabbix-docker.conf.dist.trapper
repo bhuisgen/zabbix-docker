@@ -1,7 +1,6 @@
 # zabbix-docker.conf
 
 [main]
-
 log = yes
 log_level = info
 #rootfs = /
@@ -18,6 +17,7 @@ events = yes
 [zabbix]
 #server =
 #hostname =
+#hostname_cluster =
 
 [discovery]
 #startup = 15
