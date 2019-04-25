@@ -18,6 +18,7 @@ from zabbixdocker.services.containers import DockerContainersService, DockerCont
     DockerContainersRemoteService, DockerContainersTopService
 from zabbixdocker.services.discovery import DockerDiscoveryService
 from zabbixdocker.services.events import DockerEventsService
+from zabbixdocker.services.swarm import DockerSwarmService, DockerSwarmServicesService, DockerSwarmStacksService
 
 
 class Application(object):
@@ -66,10 +67,13 @@ class Application(object):
         log_level = error
         rootfs = /
         containers = yes
-        containers_stats = yes
+        containers_stats = no
         containers_top = no
         containers_remote = no
         events = yes
+        swarm = no
+        swarm_services = yes
+        swarm_stacks = no
 
         [docker]
         base_url = unix:///var/run/docker.sock
@@ -82,9 +86,9 @@ class Application(object):
         interval = 300
         poll_events = yes
         poll_events_interval = 15
-
+        
         [containers]
-        startup = 15
+        startup = 30
         interval = 60
 
         [containers_stats]
@@ -110,6 +114,18 @@ class Application(object):
         [events]
         startup = 30
         interval = 60
+
+        [swarm]
+        startup = 30
+        interval = 60
+        
+        [swarm_services]
+        startup = 30
+        interval = 60
+        
+        [swarm_stacks]
+        startup = 30
+        interval = 60
         """
 
         self._config = configparser.ConfigParser()
@@ -131,6 +147,12 @@ class Application(object):
 
         if "hostname" in args and args.hostname:
             self._config.set("zabbix", "hostname", args.hostname)
+
+        if (
+            self._config.getboolean("main", "swarm") is True and
+            self._config.has_option("zabbix", "hostname_cluster") is False
+        ):
+            raise ValueError("Missing configuration value for option 'hostname_cluster' in section 'zabbix'")
 
         if self._config.getboolean("main", "log"):
             if self._config.get("main", "log_level") == "error":
@@ -183,33 +205,46 @@ class Application(object):
 
         self._logger.info("starting services")
 
-        containers_discovery_service = DockerDiscoveryService(self._config, self._stop_event, docker_client,
-                                                              zabbix_sender)
-        containers_discovery_service.start()
+        discovery_service = DockerDiscoveryService(self._config, self._stop_event, docker_client, zabbix_sender)
+        discovery_service.start()
 
-        if self._config.getboolean("main", "containers"):
+        if self._config.getboolean("main", "containers") is True:
             containers_service = DockerContainersService(self._config, self._stop_event, docker_client, zabbix_sender)
             containers_service.start()
 
-        if self._config.getboolean("main", "containers_stats"):
-            containers_stats_service = DockerContainersStatsService(self._config, self._stop_event, docker_client,
+            if self._config.getboolean("main", "containers_stats") is True:
+                containers_stats_service = DockerContainersStatsService(self._config, self._stop_event, docker_client,
+                                                                        zabbix_sender)
+                containers_stats_service.start()
+
+            if self._config.getboolean("main", "containers_top") is True:
+                containers_top_service = DockerContainersTopService(self._config, self._stop_event, docker_client,
                                                                     zabbix_sender)
-            containers_stats_service.start()
+                containers_top_service.start()
 
-        if self._config.getboolean("main", "containers_top"):
-            containers_top_service = DockerContainersTopService(self._config, self._stop_event, docker_client,
-                                                                zabbix_sender)
-            containers_top_service.start()
+            if self._config.getboolean("main", "containers_remote") is True:
+                containers_remote_service = DockerContainersRemoteService(self._config, self._stop_event, docker_client,
+                                                                          zabbix_sender)
+                containers_remote_service.start()
 
-        if self._config.getboolean("main", "containers_remote"):
-            containers_remote_service = DockerContainersRemoteService(self._config, self._stop_event, docker_client,
-                                                                      zabbix_sender)
-            containers_remote_service.start()
-
-        if self._config.getboolean("main", "events"):
+        if self._config.getboolean("main", "events") is True:
             events_service = DockerEventsService(self._config, self._stop_event, docker_client, zabbix_sender,
-                                                 containers_discovery_service)
+                                                 discovery_service)
             events_service.start()
+
+        if self._config.getboolean("main", "swarm") is True:
+            swarm_service = DockerSwarmService(self._config, self._stop_event, docker_client, zabbix_sender)
+            swarm_service.start()
+
+            if self._config.getboolean("main", "swarm_services") is True:
+                swarm_services_service = DockerSwarmServicesService(self._config, self._stop_event, docker_client,
+                                                                    zabbix_sender)
+                swarm_services_service.start()
+
+            if self._config.getboolean("main", "swarm_stacks") is True:
+                swarm_stacks_service = DockerSwarmStacksService(self._config, self._stop_event, docker_client,
+                                                                zabbix_sender)
+                swarm_stacks_service.start()
 
         while not self._stop_event.isSet():
             self._logger.debug("waiting signal")

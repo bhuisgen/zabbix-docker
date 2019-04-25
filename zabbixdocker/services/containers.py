@@ -826,7 +826,7 @@ class DockerContainersStatsWorker(threading.Thread):
             self._logger.info("querying statistics metrics for container %s" % container["Id"])
 
             try:
-                data = self._docker_client.stats(container, decode=True, stream=False)
+                data = self._docker_client.stats(container, decode=False, stream=False)
 
                 self._containers_stats[container["Id"]] = {
                     "data": data,
