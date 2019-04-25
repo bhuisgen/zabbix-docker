@@ -1,5 +1,6 @@
 from __future__ import division
 
+import configparser
 import datetime
 import json
 import logging
@@ -8,15 +9,26 @@ import queue
 import re
 import threading
 
-import pyzabbix
+import docker
+
+from pyzabbix import ZabbixMetric, ZabbixSender
 
 
 class DockerDiscoveryService(threading.Thread):
-    """This class implements the discovery service which discovers containers and images"""
+    """
+    This class implements the discovery service which discovers containers and images
+    """
 
-    def __init__(self, config, stop_event, docker_client, zabbix_sender):
-        """Initialize a new instance"""
+    def __init__(self, config: configparser.ConfigParser, stop_event: threading.Event, docker_client: docker.APIClient,
+                 zabbix_sender: ZabbixSender):
+        """
+        Initialize an instance
 
+        :param config: the configuration parser
+        :param stop_event: the event to stop execution
+        :param docker_client: the docker client
+        :param zabbix_sender: the zabbix sender
+        """
         super(DockerDiscoveryService, self).__init__()
         self._logger = logging.getLogger(self.__class__.__name__)
         self._workers = []
@@ -27,8 +39,9 @@ class DockerDiscoveryService(threading.Thread):
         self._zabbix_sender = zabbix_sender
 
     def run(self):
-        """Execute the thread"""
-
+        """
+        Execute the thread
+        """
         if self._config.getboolean("main", "containers"):
             worker = DockerDiscoveryContainersWorker(self._config, self._docker_client, self._zabbix_sender,
                                                      self._containers_queue)
@@ -57,24 +70,35 @@ class DockerDiscoveryService(threading.Thread):
         self._logger.info("service stopped")
 
     def _execute(self):
-        """Execute the service"""
-
+        """
+        Execute the discovery
+        """
         self._logger.debug("requesting discovery")
         self._containers_queue.put("discovery")
 
-    def execute_containers_discovery(self):
-        """Execute the service"""
-
+    def trigger(self):
+        """
+        Request a new discovery execution
+        """
         self._logger.debug("requesting containers discovery")
         self._containers_queue.put("discovery")
 
 
 class DockerDiscoveryContainersWorker(threading.Thread):
-    """This class implements a containers discovery worker thread"""
+    """
+    This class implements a containers discovery worker thread
+    """
 
-    def __init__(self, config, docker_client, zabbix_sender, containers_queue):
-        """Initialize the thread"""
+    def __init__(self, config: configparser.ConfigParser, docker_client: docker.APIClient, zabbix_sender: ZabbixSender,
+                 containers_queue: queue.Queue):
+        """
+        Initialize the instance
 
+        :param config: the configuration parser
+        :param docker_client: the docker client
+        :param zabbix_sender: the zabbix sender
+        :param containers_queue: the containers queue
+        """
         super(DockerDiscoveryContainersWorker, self).__init__()
         self._logger = logging.getLogger(self.__class__.__name__)
         self._config = config
@@ -83,8 +107,9 @@ class DockerDiscoveryContainersWorker(threading.Thread):
         self._containers_queue = containers_queue
 
     def run(self):
-        """Execute the thread"""
-
+        """
+        Execute the thread
+        """
         while True:
             self._logger.debug("waiting execution queue")
             item = self._containers_queue.get()
@@ -103,118 +128,126 @@ class DockerDiscoveryContainersWorker(threading.Thread):
                 discovery_containers_top = []
                 device_pattern = re.compile(r'^DEVNAME=(.+)$')
 
-                containers = self._docker_client.containers(all=True)
+                    containers = self._docker_client.containers(all=True)
 
-                for container in containers:
-                    container_id = container["Id"]
-                    container_name = container["Names"][0][1:]
+                    for container in containers:
+                        container_id = container["Id"]
+                        container_name = container["Names"][0][1:]
 
-                    discovery_containers.append({
-                        "{#NAME}": container_name
-                    })
+                        discovery_containers.append({
+                            "{#NAME}": container_name
+                        })
 
-                    if container["Status"].startswith("Up"):
-                        if self._config.getboolean("main", "containers_stats"):
-                            container_stats = self._docker_client.stats(container_id, decode=True, stream=False)
+                        if container["Status"].startswith("Up"):
+                            if self._config.getboolean("main", "containers_stats"):
+                                container_stats = self._docker_client.stats(container_id, decode=True, stream=False)
 
-                            discovery_containers_stats.append({
-                                "{#NAME}": container_name
-                            })
+                                discovery_containers_stats.append({
+                                    "{#NAME}": container_name
+                                })
 
-                            if (
-                                "cpu_stats" in container_stats and
-                                "cpu_usage" in container_stats["cpu_stats"] and
-                                "percpu_usage" in container_stats["cpu_stats"]["cpu_usage"]
-                            ):
-                                cpus = len(container_stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
+                                if (
+                                    "cpu_stats" in container_stats and
+                                    "cpu_usage" in container_stats["cpu_stats"] and
+                                    "percpu_usage" in container_stats["cpu_stats"]["cpu_usage"]
+                                ):
+                                    cpus = len(container_stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
 
-                                for i in range(cpus):
-                                    discovery_containers_stats_cpus.append({
-                                        "{#NAME}": container_name,
-                                        "{#CPU}": "%d" % i
-                                    })
+                                    for i in range(cpus):
+                                        discovery_containers_stats_cpus.append({
+                                            "{#NAME}": container_name,
+                                            "{#CPU}": "%d" % i
+                                        })
 
-                            if "networks" in container_stats:
-                                for container_stats_network_ifname in list(container_stats["networks"].keys()):
-                                    discovery_containers_stats_networks.append({
-                                        "{#NAME}": container_name,
-                                        "{#IFNAME}": container_stats_network_ifname
-                                    })
+                                if "networks" in container_stats:
+                                    for container_stats_network_ifname in list(container_stats["networks"].keys()):
+                                        discovery_containers_stats_networks.append({
+                                            "{#NAME}": container_name,
+                                            "{#IFNAME}": container_stats_network_ifname
+                                        })
 
-                            if (
-                                "blkio_stats" in container_stats and
-                                "io_serviced_recursive" in container_stats["blkio_stats"]
-                            ):
-                                for j in range(len(container_stats["blkio_stats"]["io_serviced_recursive"])):
-                                    if container_stats["blkio_stats"]["io_serviced_recursive"][j]["op"] != "Total":
-                                        continue
+                                if (
+                                    "blkio_stats" in container_stats and
+                                    "io_serviced_recursive" in container_stats["blkio_stats"]
+                                ):
+                                    for j in range(len(container_stats["blkio_stats"]["io_serviced_recursive"])):
+                                        if container_stats["blkio_stats"]["io_serviced_recursive"][j]["op"] != "Total":
+                                            continue
 
-                                    sysfs_file = "%s/dev/block/%s:%s/uevent" % (
-                                        os.path.join(self._config.get("main", "rootfs"), "sys"),
-                                        container_stats["blkio_stats"]["io_serviced_recursive"][j]["major"],
-                                        container_stats["blkio_stats"]["io_serviced_recursive"][j]["minor"])
-                                    with open(sysfs_file) as f:
-                                        for line in f:
-                                            match = re.search(device_pattern, line)
-                                            if not match:
-                                                continue
+                                        sysfs_file = "%s/dev/block/%s:%s/uevent" % (
+                                            os.path.join(self._config.get("main", "rootfs"), "sys"),
+                                            container_stats["blkio_stats"]["io_serviced_recursive"][j]["major"],
+                                            container_stats["blkio_stats"]["io_serviced_recursive"][j]["minor"])
+                                        with open(sysfs_file) as f:
+                                            for line in f:
+                                                match = re.search(device_pattern, line)
+                                                if not match:
+                                                    continue
 
-                                            discovery_containers_stats_devices.append({
-                                                "{#NAME}": container_name,
-                                                "{#DEVMAJOR}": container_stats["blkio_stats"]
-                                                ["io_serviced_recursive"][j]["major"],
-                                                "{#DEVMINOR}": container_stats["blkio_stats"]
-                                                ["io_serviced_recursive"][j]["minor"],
-                                                "{#DEVNAME}": match.group(1)
-                                            })
+                                                discovery_containers_stats_devices.append({
+                                                    "{#NAME}": container_name,
+                                                    "{#DEVMAJOR}": container_stats["blkio_stats"]
+                                                    ["io_serviced_recursive"][j]["major"],
+                                                    "{#DEVMINOR}": container_stats["blkio_stats"]
+                                                    ["io_serviced_recursive"][j]["minor"],
+                                                    "{#DEVNAME}": match.group(1)
+                                                })
 
-                        if self._config.getboolean("main", "containers_top"):
-                            container_top = self._docker_client.top(container)
-                            if "Processes" in container_top:
-                                for j in range(len(container_top["Processes"])):
-                                    discovery_containers_top.append({
-                                        "{#NAME}": container_name,
-                                        "{#PID}": container_top["Processes"][j][1],
-                                        "{#CMD}": container_top["Processes"][j][7]
-                                    })
+                            if self._config.getboolean("main", "containers_top"):
+                                container_top = self._docker_client.top(container)
+                                if "Processes" in container_top:
+                                    for j in range(len(container_top["Processes"])):
+                                        discovery_containers_top.append({
+                                            "{#NAME}": container_name,
+                                            "{#PID}": container_top["Processes"][j][1],
+                                            "{#CMD}": container_top["Processes"][j][7]
+                                        })
 
-                metrics.append(
-                    pyzabbix.ZabbixMetric(
-                        self._config.get("zabbix", "hostname"),
-                        "docker.discovery.containers",
-                        json.dumps({"data": discovery_containers})))
-
-                if self._config.getboolean("main", "containers_stats"):
+                if self._config.getboolean("main", "services"):
                     metrics.append(
-                        pyzabbix.ZabbixMetric(
+                        ZabbixMetric(
                             self._config.get("zabbix", "hostname"),
-                            "docker.discovery.containers.stats",
-                            json.dumps({"data": discovery_containers_stats})))
+                            "docker.discovery.services",
+                            json.dumps({"data": discovery_services})))
 
+                if self._config.getboolean("main", "containers"):
                     metrics.append(
-                        pyzabbix.ZabbixMetric(
+                        ZabbixMetric(
                             self._config.get("zabbix", "hostname"),
-                            "docker.discovery.containers.stats.cpus",
-                            json.dumps({"data": discovery_containers_stats_cpus})))
+                            "docker.discovery.containers",
+                            json.dumps({"data": discovery_containers})))
 
-                    metrics.append(
-                        pyzabbix.ZabbixMetric(
-                            self._config.get("zabbix", "hostname"),
-                            "docker.discovery.containers.stats.networks",
-                            json.dumps({"data": discovery_containers_stats_networks})))
+                    if self._config.getboolean("main", "containers_stats"):
+                        metrics.append(
+                            ZabbixMetric(
+                                self._config.get("zabbix", "hostname"),
+                                "docker.discovery.containers.stats",
+                                json.dumps({"data": discovery_containers_stats})))
 
-                    metrics.append(
-                        pyzabbix.ZabbixMetric(
-                            self._config.get("zabbix", "hostname"),
-                            "docker.discovery.containers.stats.devices",
-                            json.dumps({"data": discovery_containers_stats_devices})))
+                        metrics.append(
+                            ZabbixMetric(
+                                self._config.get("zabbix", "hostname"),
+                                "docker.discovery.containers.stats.cpus",
+                                json.dumps({"data": discovery_containers_stats_cpus})))
 
-                if self._config.getboolean("main", "containers_top"):
-                    metrics.append(
-                        pyzabbix.ZabbixMetric(
-                            self._config.get("zabbix", "hostname"),
-                            "docker.discovery.containers.top",
-                            json.dumps({"data": discovery_containers_top})))
+                        metrics.append(
+                            ZabbixMetric(
+                                self._config.get("zabbix", "hostname"),
+                                "docker.discovery.containers.stats.networks",
+                                json.dumps({"data": discovery_containers_stats_networks})))
+
+                        metrics.append(
+                            ZabbixMetric(
+                                self._config.get("zabbix", "hostname"),
+                                "docker.discovery.containers.stats.devices",
+                                json.dumps({"data": discovery_containers_stats_devices})))
+
+                    if self._config.getboolean("main", "containers_top"):
+                        metrics.append(
+                            ZabbixMetric(
+                                self._config.get("zabbix", "hostname"),
+                                "docker.discovery.containers.top",
+                                json.dumps({"data": discovery_containers_top})))
 
                 if len(metrics) > 0:
                     self._logger.debug("sending %d metrics" % len(metrics))
@@ -224,11 +257,19 @@ class DockerDiscoveryContainersWorker(threading.Thread):
 
 
 class DockerDiscoveryContainersEventsPollerWorker(threading.Thread):
-    """This class implements a containers discovery by events worker thread"""
+    """
+    This class implements a containers discovery by events worker thread
+    """
 
-    def __init__(self, config, docker_client, discovery_service):
-        """Initialize the thread"""
+    def __init__(self, config: configparser.ConfigParser, docker_client: docker.APIClient,
+                 discovery_service: DockerDiscoveryService):
+        """
+        Initialize the instance
 
+        :param config: the config parser
+        :param docker_client: the docker client
+        :param discovery_service: the discovery service
+        """
         super(DockerDiscoveryContainersEventsPollerWorker, self).__init__()
         self._logger = logging.getLogger(self.__class__.__name__)
         self._config = config
@@ -236,15 +277,15 @@ class DockerDiscoveryContainersEventsPollerWorker(threading.Thread):
         self._discovery_service = discovery_service
 
     def run(self):
-        """Execute the thread"""
-
+        """
+        Execute the thread
+        """
         until = None
 
         while True:
             since = datetime.datetime.utcnow() if until is None else until
-            until = datetime.datetime.utcnow() + \
-                datetime.timedelta(seconds=self._config.getint("discovery", "poll_events_interval"))
-
+            until = datetime.datetime.utcnow() + datetime.timedelta(
+                seconds=self._config.getint("discovery", "poll_events_interval"))
             containers_start = 0
 
             self._logger.info("querying containers events")
@@ -261,4 +302,4 @@ class DockerDiscoveryContainersEventsPollerWorker(threading.Thread):
                     containers_start += 1
 
             if containers_start > 0:
-                self._discovery_service.execute_containers_discovery()
+                self._discovery_service.trigger()
