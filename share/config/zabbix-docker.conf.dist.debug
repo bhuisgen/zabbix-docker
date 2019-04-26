@@ -26,7 +26,7 @@ events = yes
 #poll_events_interval = 15
 
 [containers]
-#startup = 15
+#startup = 30
 #interval = 60
 
 [containers_stats]
@@ -40,8 +40,8 @@ events = yes
 #workers = 10
 
 [containers_remote]
-startup = 5
-interval = 60
+#startup = 30
+#interval = 60
 workers = 1
 path = /etc/zabbix/scripts/trapper:/etc/zabbix/discovery/trapper
 delay = 1:5

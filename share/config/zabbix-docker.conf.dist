@@ -63,7 +63,7 @@
 
 [services]
 
-#startup = 15                               # startup interval (seconds)
+#startup = 30                               # startup interval (seconds)
 #interval = 60                              # execution interval (seconds)
 
 #
@@ -72,7 +72,7 @@
 
 [containers]
 
-#startup = 15                               # startup interval (seconds)
+#startup = 30                               # startup interval (seconds)
 #interval = 60                              # execution interval (seconds)
 
 
