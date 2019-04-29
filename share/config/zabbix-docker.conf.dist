@@ -10,13 +10,14 @@
 #log = yes                                  # enable log messages
 #log_level = error                          # log level (error/warning/info/debug)
 #rootfs = /                                 # path to the docker host rootfs
-#services = yes                             # enable services metrics
 #containers = yes                           # enable containers metrics
 #containers_stats = yes                     # enable containers statistics metrics
 #containers_top = no                        # enable containers processes metrics
 #containers_remote = no                     # enable execution of remote commands inside containers
 #events = yes                               # enable docker events
-
+#swarm = no                                 # enable swarm metrics
+#swarm_services = yes                       # enable swarm services metrics
+#swarm_stacks = no                          # enable swarm stacks metrics
 
 #
 # Docker client
@@ -57,14 +58,6 @@
 #poll_events = yes                          # poll docker events for containers discovery
 #poll_events_interval = 15                  # poll interval
 
-#
-# Docker services metrics
-#
-
-[services]
-
-#startup = 30                               # startup interval (seconds)
-#interval = 60                              # execution interval (seconds)
 
 #
 # Docker containers metrics
@@ -140,3 +133,34 @@
 
 #startup = 30                               # startup time (seconds)
 #interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker swarm metrics
+#
+
+[swarm]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker swarm services metrics
+#
+
+[swarm_services]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker swarm stacks metrics
+#
+
+[swarm_stacks]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
