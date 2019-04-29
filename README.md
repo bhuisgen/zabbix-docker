@@ -19,15 +19,12 @@ Install the required python dependencies:
 
 Add the required templates on your Zabbix server from the *docs/zabbix/templates* directory:
 
-- *template_docker_host.xml*: template for basic host metrics like the default *Template OS Linux* with discovery rules
-for disks, filesystems and network interfaces.
+- *template_docker_host.xml*
+- *template_docker_engine.xml*
+- *template_docker_manager.xml*
+- *template_docker_cluster.xml*
 
-- *template_docker_engine.xml*: template for docker engine metrics with discovery rules for containers, containers
-statistics and containers top processes.
-
-- *template_docker_manager.xml*: template for docker swarm metrics with discovery rules for services.  
-
-- *template_docker_cluster.xml*: template to aggregate docker engine metrics per cluster using a zabbix host group.
+For more information on these templates, read the following [documentation](doc/TEMPLATES.md) 
 
 Some global regular expressions must be created for the discovery rules:
 
@@ -46,7 +43,7 @@ Create the configuration file and configure it:
     # cp share/config/zabbix-docker.conf.dist /etc/zabbix-docker/zabbix-docker.conf
     # vim /etc/zabbix-docker/zabbix-docker.conf
 
-For more information on the configuration settings, read the following [guide](doc/CONFIG.md)
+For more information on the configuration settings, read the following [documentation](doc/CONFIG.md)
 
 You can now run the agent:
 
