@@ -409,14 +409,15 @@ class DockerContainersStatsService(threading.Thread):
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["cache"]),
                                 clock))
-                        metrics.append(
-                            ZabbixMetric(
-                                self._config.get("zabbix", "hostname"),
-                                "docker.containers.stats.memory_stats.stats_dirty[%s]" % (
-                                    container_name),
-                                "%d" % (
-                                    container_stats["memory_stats"]["stats"]["dirty"]),
-                                clock))
+                        if "dirty" in container_stats["memory_stats"]["stats"]:
+                            metrics.append(
+                                ZabbixMetric(
+                                    self._config.get("zabbix", "hostname"),
+                                    "docker.containers.stats.memory_stats.stats_dirty[%s]" % (
+                                        container_name),
+                                    "%d" % (
+                                        container_stats["memory_stats"]["stats"]["dirty"]),
+                                    clock))
                         metrics.append(
                             ZabbixMetric(
                                 self._config.get("zabbix", "hostname"),
@@ -523,14 +524,15 @@ class DockerContainersStatsService(threading.Thread):
                                 "%d" % (
                                     container_stats["memory_stats"]["stats"]["unevictable"]),
                                 clock))
-                        metrics.append(
-                            ZabbixMetric(
-                                self._config.get("zabbix", "hostname"),
-                                "docker.containers.stats.memory_stats.stats_writeback[%s]" % (
-                                    container_name),
-                                "%d" % (
-                                    container_stats["memory_stats"]["stats"]["writeback"]),
-                                clock))
+                        if "writeback" in container_stats["memory_stats"]["stats"]:
+                            metrics.append(
+                                ZabbixMetric(
+                                    self._config.get("zabbix", "hostname"),
+                                    "docker.containers.stats.memory_stats.stats_writeback[%s]" % (
+                                        container_name),
+                                    "%d" % (
+                                        container_stats["memory_stats"]["stats"]["writeback"]),
+                                    clock))
                         metrics.append(
                             ZabbixMetric(
                                 self._config.get("zabbix", "hostname"),
@@ -587,13 +589,14 @@ class DockerContainersStatsService(threading.Thread):
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_cache"]),
                                     clock))
-                            metrics.append(
-                                ZabbixMetric(
-                                    self._config.get("zabbix", "hostname"),
-                                    "docker.containers.stats.memory_stats.stats_total_dirty",
-                                    "%d" % (
-                                        container_stats["memory_stats"]["stats"]["total_dirty"]),
-                                    clock))
+                            if "total_dirty" in container_stats["memory_stats"]["stats"]:
+                                metrics.append(
+                                    ZabbixMetric(
+                                        self._config.get("zabbix", "hostname"),
+                                        "docker.containers.stats.memory_stats.stats_total_dirty",
+                                        "%d" % (
+                                            container_stats["memory_stats"]["stats"]["total_dirty"]),
+                                        clock))
                             metrics.append(
                                 ZabbixMetric(
                                     self._config.get("zabbix", "hostname"),
@@ -672,14 +675,14 @@ class DockerContainersStatsService(threading.Thread):
                                     "%d" % (
                                         container_stats["memory_stats"]["stats"]["total_unevictable"]),
                                     clock))
-                            metrics.append(
-                                ZabbixMetric(
-                                    self._config.get("zabbix", "hostname"),
-                                    "docker.containers.stats.memory_stats.stats_total_writeback",
-                                    "%d" % (
-                                        container_stats["memory_stats"]["stats"]["total_writeback"]),
-                                    clock))
-
+                            if "total_writeback" in container_stats["memory_stats"]["stats"]:
+                                metrics.append(
+                                    ZabbixMetric(
+                                        self._config.get("zabbix", "hostname"),
+                                        "docker.containers.stats.memory_stats.stats_total_writeback",
+                                        "%d" % (
+                                            container_stats["memory_stats"]["stats"]["total_writeback"]),
+                                        clock))
                     if 'networks' in container_stats:
                         for container_stats_network_ifname in list(container_stats["networks"].keys()):
                             metrics.append(
