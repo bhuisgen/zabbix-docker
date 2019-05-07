@@ -13,33 +13,17 @@ Add it to all your docker hosts.
 
 File: *template_docker_engine.xml*
 
-This template contains all docker engine items and discovery rules for containers, containers statistics (like CPU
+This template contains all docker items and discovery rules for containers, containers statistics (like CPU
 and memory) and containers top processes.
 
 Add it to all your docker hosts.
-
-## Docker Manager
-
-File: *template_docker_manager.xml*
- 
-This template contains all docker cluster items and discovery rules for services.
-
-Add it all your swarm managers as zabbix-docker will detect himself which is the active leader before sending metrics.
-
-To use it, you should do:
-
-- configure the *hostname_cluster* option in *zabbix* section of zabbix-docker on all instances
-
-- create a zabbix host without agent using the cluster hostname as configured previously
- 
-- add it this template 
 
 ## Docker Cluster
 
 File: *template_docker_cluster.xml*
  
 This template is a pure zabbix template containing all the aggregated items from the previous templates allowing you to
-summarize the metrics and resources per cluster.
+aggregate the metrics and resources of your docker nodes per cluster.
 
 To use it, you should:
 
@@ -50,3 +34,20 @@ To use it, you should:
 - add the macro *{$DOCKER_CLUSTER.GROUP}* on this host with the name of the zabbix host group
 
 - add it this template
+
+## Docker Swarm
+
+File: *template_docker_swarm.xml*
+ 
+This template contains all docker items and discovery rules for swarm resources. 
+
+Add it to all your swarm nodes. Zabbix-docker will detect himself which is the active manager leader of these nodes 
+before sending any metrics to same zabbix host.
+
+To use it, you should:
+
+- configure the *hostname_cluster* option in *zabbix* section of zabbix-docker with the same value for all nodes
+
+- create a zabbix host without agent using the previously cluster hostname
+ 
+- add it this template 

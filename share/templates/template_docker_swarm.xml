@@ -9,8 +9,8 @@
     </groups>
     <templates>
         <template>
-            <template>Custom Template Docker Manager</template>
-            <name>Custom Template Docker Manager</name>
+            <template>Custom Template Docker Swarm</template>
+            <name>Custom Template Docker Swarm</name>
             <description/>
             <groups>
                 <group>
