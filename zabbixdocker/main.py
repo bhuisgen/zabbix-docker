@@ -80,6 +80,7 @@ class Application(object):
         timeout = 5
 
         [zabbix]
+        timeout = 10
 
         [discovery]
         startup = 15
@@ -196,9 +197,11 @@ class Application(object):
                 server = serverport[0]
                 port = int(serverport[1])
 
-            zabbix_sender = pyzabbix.ZabbixSender(zabbix_server=server, zabbix_port=port)
+            zabbix_sender = pyzabbix.ZabbixSender(zabbix_server=server, zabbix_port=port,
+                                                  timeout=self._config.getint("zabbix", "timeout"))
         else:
-            zabbix_sender = pyzabbix.ZabbixSender(use_config=True)
+            zabbix_sender = pyzabbix.ZabbixSender(use_config=True,
+                                                  timeout=self._config.getint("zabbix", "timeout"))
 
         if not self._config.has_option("zabbix", "hostname"):
             self._config.set("zabbix", "hostname", socket.gethostname())

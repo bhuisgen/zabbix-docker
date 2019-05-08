@@ -46,6 +46,8 @@
 #hostname_cluster =                         # hostname to send cluster metrics.
                                             #
                                             # This option is required to monitor cluster metrics.
+                                            #
+#timeout = 10                               # timeout to send metrics
 
 #
 # Docker containers discovery service

@@ -21,6 +21,7 @@ swarm_stacks = no
 #server =
 #hostname =
 #hostname_cluster =
+#timeout = 10
 
 [discovery]
 #startup = 15
