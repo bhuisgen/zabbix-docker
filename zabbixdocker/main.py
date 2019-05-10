@@ -84,9 +84,9 @@ class Application(object):
 
         [discovery]
         startup = 15
-        interval = 300
+        interval = 900
         poll_events = yes
-        poll_events_interval = 15
+        poll_events_interval = 60
         
         [containers]
         startup = 30

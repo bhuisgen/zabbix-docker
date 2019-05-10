@@ -56,9 +56,9 @@
 [discovery]
 
 #startup = 15                               # startup time (seconds)
-#interval = 300                             # execution interval (seconds)
+#interval = 900                             # execution interval (seconds)
 #poll_events = yes                          # poll docker events for containers discovery
-#poll_events_interval = 15                  # poll interval
+#poll_events_interval = 60                  # poll interval
 
 
 #
