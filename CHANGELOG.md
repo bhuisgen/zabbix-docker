@@ -1,3 +1,8 @@
+## 0.4.0 (2019-05-08)
+
+- add swarm monitoring for services and stacks
+- add option for zabbix send timeout
+
 ## 0.3.2 (2019-03-14)
 
 - use docker SDK 3.7.0

@@ -41,7 +41,7 @@ File: *template_docker_swarm.xml*
  
 This template contains all docker items and discovery rules for swarm resources. 
 
-Add it to all your swarm nodes. Zabbix-docker will detect himself which is the active manager leader of these nodes 
+Add it to all your swarm nodes. Zabbix-docker will detect itself which is the active manager leader of these nodes 
 before sending any metrics to same zabbix host.
 
 To use it, you should:

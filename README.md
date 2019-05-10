@@ -6,8 +6,8 @@ Boris HUISGEN <bhuisgen@hbis.fr>
 
 ## Introduction
 
-Zabbix-docker is an agent which monitors a docker engine, getting his metrics and sending them to a Zabbix server or
-proxy. You can monitor a single docker engine, a pool of engines or a swarm cluster
+Zabbix-docker is an agent which monitors a docker engine, getting his metrics and sending them directly to a Zabbix 
+server or proxy. You can monitor a single docker engine or a swarm cluster.
 
 ## Setup
 
@@ -30,10 +30,12 @@ Some global regular expressions must be created for the discovery rules:
 
 | Name                                         | Expression type   | Expression        |
 |----------------------------------------------|-------------------|-------------------|
-| Docker mount points for discovery            | [Result is FALSE] | ^/etc             |
+| Docker mount points for discovery            | [Result is FALSE] | ^/etc             | 
 | Docker network interfaces for discovery      | [Result is FALSE] | ^veth             |
-| Docker container names for discovery         | [Result is TRUE]  | .+                |
+| Docker container names for discovery         | [Result is FALSE] | ^k8               |
 | Docker container process names for discovery | [Result is TRUE]  | .+                |
+| Docker swarm service names for discovery     | [Result is TRUE]  | .+                |
+| Docker swarm stack names for discovery       | [Result is TRUE]  | .+                |
 
 ## Usage
 
