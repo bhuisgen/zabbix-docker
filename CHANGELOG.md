@@ -1,6 +1,6 @@
 ## 0.4.0 (2019-05-08)
 
-- add swarm monitoring for services and stacks
+- add swarm monitoring metrics (services, stacks, configs and secrets)
 - add option for zabbix send timeout
 
 ## 0.3.2 (2019-03-14)

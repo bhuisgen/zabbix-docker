@@ -7,7 +7,7 @@ Boris HUISGEN <bhuisgen@hbis.fr>
 ## Introduction
 
 Zabbix-docker is an agent which monitors a docker engine, getting his metrics and sending them directly to a Zabbix 
-server or proxy. You can monitor a single docker engine or a swarm cluster.
+server or a Zabbix proxy. You can monitor a single docker engine or a swarm cluster.
 
 ## Setup
 
@@ -28,14 +28,17 @@ For more information on these templates, read the following [documentation](doc/
 
 Some global regular expressions must be created for the discovery rules:
 
-| Name                                         | Expression type   | Expression        |
-|----------------------------------------------|-------------------|-------------------|
-| Docker mount points for discovery            | [Result is FALSE] | ^/etc             | 
-| Docker network interfaces for discovery      | [Result is FALSE] | ^veth             |
-| Docker container names for discovery         | [Result is FALSE] | ^k8               |
-| Docker container process names for discovery | [Result is TRUE]  | .+                |
-| Docker swarm service names for discovery     | [Result is TRUE]  | .+                |
-| Docker swarm stack names for discovery       | [Result is TRUE]  | .+                |
+| Name                                         | Expression type   | Expression      | Note                            |
+|----------------------------------------------|-------------------|-----------------|---------------------------------|
+| Docker mount points for discovery            | [Result is FALSE] | ^/etc           | Container mountpoints to ignore
+| Docker network interfaces for discovery      | [Result is FALSE] | ^veth           | Host virtual intefaces to ignore
+| Docker container names for discovery         | [Result is FALSE] | ^k8             |
+| Docker container process names for discovery | [Result is TRUE]  | .+              | 
+| Docker network names for discovery           | [Result is TRUE]  | .+              |
+| Docker swarm service names for discovery     | [Result is TRUE]  | .+              |
+| Docker swarm stack names for discovery       | [Result is TRUE]  | .+              |
+
+
 
 ## Usage
 
