@@ -9,6 +9,8 @@ containers_stats = yes
 containers_top = no
 containers_remote = yes
 events = yes
+networks = yes
+volumes = yes
 swarm = yes
 swarm_services = yes
 swarm_stacks = no
@@ -54,6 +56,14 @@ delay = 1:5
 #trappers_timestamp = no
 
 [events]
+#startup = 30
+#interval = 60
+
+[networks]
+#startup = 30
+#interval = 60
+
+[volumes]
 #startup = 30
 #interval = 60
 

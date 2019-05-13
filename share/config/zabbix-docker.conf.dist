@@ -13,11 +13,14 @@
 #containers = yes                           # enable containers metrics
 #containers_stats = yes                     # enable containers statistics metrics
 #containers_top = no                        # enable containers processes metrics
-#containers_remote = no                     # enable execution of remote commands inside containers
-#events = yes                               # enable docker events
+#containers_remote = no                     # enable containers remote metrics
+#events = yes                               # enable events metrics
+#networks = yes                             # enable networks metrics
+#volumes = yes                              # enable volumes metrics
 #swarm = no                                 # enable swarm metrics
 #swarm_services = yes                       # enable swarm services metrics
 #swarm_stacks = no                          # enable swarm stacks metrics
+
 
 #
 # Docker client
@@ -138,6 +141,26 @@
 
 
 #
+# Docker networks metrics
+#
+
+[networks]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker volumes metrics
+#
+
+[volumes]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
 # Docker swarm metrics
 #
 
@@ -165,4 +188,3 @@
 
 #startup = 30                               # startup interval (seconds)
 #interval = 60                              # execution interval (seconds)
-
