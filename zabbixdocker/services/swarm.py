@@ -97,43 +97,7 @@ class DockerSwarmWorker(threading.Thread):
             self._logger.info("sending swarm metrics")
 
             try:
-                info = self._docker_client.info()
-
-                if (
-                    "Swarm" not in info or
-                    info["Swarm"] == "inactive" or
-                    "NodeID" not in info["Swarm"] or
-                    info["Swarm"]["NodeID"] == "" or
-                    "RemoteManagers" not in info["Swarm"] or
-                    info["Swarm"]["RemoteManagers"] is None
-                ):
-                    self._logger.debug("node is not a swarm member")
-
-                    continue
-
-                node_id = info["Swarm"]["NodeID"]
-                manager = False
-
-                for remote_manager in info["Swarm"]["RemoteManagers"]:
-                    if remote_manager["NodeID"] == node_id:
-                        manager = True
-
-                if manager is False:
-                    self._logger.debug("node is not a swarm manager")
-
-                    continue
-
-                node_info = self._docker_client.inspect_node(node_id)
-                leader = False
-
-                if (
-                    "Leader" in node_info["ManagerStatus"] and
-                    node_info["ManagerStatus"]["Leader"] is True and
-                    node_info["ManagerStatus"]["Reachability"] == "reachable"
-                ):
-                    leader = True
-
-                if leader is False:
+                if self._check_leader() is False:
                     self._logger.debug("node is not the swarm leader")
 
                     continue
@@ -246,6 +210,47 @@ class DockerSwarmWorker(threading.Thread):
             except (IOError, OSError):
                 self._logger.error("failed to send stacks metrics")
 
+    def _check_leader(self) -> bool:
+        """
+        Check if the node is the current swarm leader
+
+        :return: True if host is the leader; False otherwise
+        """
+        info = self._docker_client.info()
+
+        if (
+            "Swarm" not in info or
+            info["Swarm"] == "inactive" or
+            "NodeID" not in info["Swarm"] or
+            info["Swarm"]["NodeID"] == "" or
+            "RemoteManagers" not in info["Swarm"] or
+            info["Swarm"]["RemoteManagers"] is None
+        ):
+            return False
+
+        node_id = info["Swarm"]["NodeID"]
+        manager = False
+
+        for remote_manager in info["Swarm"]["RemoteManagers"]:
+            if remote_manager["NodeID"] == node_id:
+                manager = True
+
+        if manager is False:
+            return False
+
+        inspect = self._docker_client.inspect_node(node_id)
+        leader = False
+
+        if (
+            "Leader" in inspect["ManagerStatus"] and
+            inspect["ManagerStatus"]["Leader"] is True and
+            inspect["ManagerStatus"]["Reachability"] == "reachable"
+        ):
+            leader = True
+
+        if leader is False:
+            return False
+
 
 class DockerSwarmServicesService(threading.Thread):
     """ This class implements the service which send docker swarm services metrics """
@@ -334,43 +339,7 @@ class DockerSwarmServicesWorker(threading.Thread):
             self._logger.info("sending services metrics")
 
             try:
-                info = self._docker_client.info()
-
-                if (
-                    "Swarm" not in info or
-                    info["Swarm"] == "inactive" or
-                    "NodeID" not in info["Swarm"] or
-                    info["Swarm"]["NodeID"] == "" or
-                    "RemoteManagers" not in info["Swarm"] or
-                    info["Swarm"]["RemoteManagers"] is None
-                ):
-                    self._logger.debug("node is not a swarm member")
-
-                    continue
-
-                node_id = info["Swarm"]["NodeID"]
-                manager = False
-
-                for remote_manager in info["Swarm"]["RemoteManagers"]:
-                    if remote_manager["NodeID"] == node_id:
-                        manager = True
-
-                if manager is False:
-                    self._logger.debug("node is not a swarm manager")
-
-                    continue
-
-                node_info = self._docker_client.inspect_node(node_id)
-                leader = False
-
-                if (
-                    "Leader" in node_info["ManagerStatus"] and
-                    node_info["ManagerStatus"]["Leader"] is True and
-                    node_info["ManagerStatus"]["Reachability"] == "reachable"
-                ):
-                    leader = True
-
-                if leader is False:
+                if self._check_leader() is False:
                     self._logger.debug("node is not the swarm leader")
 
                     continue
@@ -624,6 +593,47 @@ class DockerSwarmServicesWorker(threading.Thread):
             except (IOError, OSError):
                 self._logger.error("failed to send services metrics")
 
+    def _check_leader(self) -> bool:
+        """
+        Check if the node is the current swarm leader
+
+        :return: True if host is the leader; False otherwise
+        """
+        info = self._docker_client.info()
+
+        if (
+            "Swarm" not in info or
+            info["Swarm"] == "inactive" or
+            "NodeID" not in info["Swarm"] or
+            info["Swarm"]["NodeID"] == "" or
+            "RemoteManagers" not in info["Swarm"] or
+            info["Swarm"]["RemoteManagers"] is None
+        ):
+            return False
+
+        node_id = info["Swarm"]["NodeID"]
+        manager = False
+
+        for remote_manager in info["Swarm"]["RemoteManagers"]:
+            if remote_manager["NodeID"] == node_id:
+                manager = True
+
+        if manager is False:
+            return False
+
+        inspect = self._docker_client.inspect_node(node_id)
+        leader = False
+
+        if (
+            "Leader" in inspect["ManagerStatus"] and
+            inspect["ManagerStatus"]["Leader"] is True and
+            inspect["ManagerStatus"]["Reachability"] == "reachable"
+        ):
+            leader = True
+
+        if leader is False:
+            return False
+
 
 class DockerSwarmStacksService(threading.Thread):
     """ This class implements the service which send docker swarm stacks metrics """
@@ -712,43 +722,7 @@ class DockerSwarmStacksWorker(threading.Thread):
             self._logger.info("sending stacks metrics")
 
             try:
-                info = self._docker_client.info()
-
-                if (
-                    "Swarm" not in info or
-                    info["Swarm"] == "inactive" or
-                    "NodeID" not in info["Swarm"] or
-                    info["Swarm"]["NodeID"] == "" or
-                    "RemoteManagers" not in info["Swarm"] or
-                    info["Swarm"]["RemoteManagers"] is None
-                ):
-                    self._logger.debug("node is not a swarm member")
-
-                    continue
-
-                node_id = info["Swarm"]["NodeID"]
-                manager = False
-
-                for remote_manager in info["Swarm"]["RemoteManagers"]:
-                    if remote_manager["NodeID"] == node_id:
-                        manager = True
-
-                if manager is False:
-                    self._logger.debug("node is not a swarm manager")
-
-                    continue
-
-                node_info = self._docker_client.inspect_node(node_id)
-                leader = False
-
-                if (
-                    "Leader" in node_info["ManagerStatus"] and
-                    node_info["ManagerStatus"]["Leader"] is True and
-                    node_info["ManagerStatus"]["Reachability"] == "reachable"
-                ):
-                    leader = True
-
-                if leader is False:
+                if self._check_leader() is False:
                     self._logger.debug("node is not the swarm leader")
 
                     continue
@@ -847,3 +821,44 @@ class DockerSwarmStacksWorker(threading.Thread):
                     self._zabbix_sender.send(metrics)
             except (IOError, OSError):
                 self._logger.error("failed to send stacks metrics")
+
+    def _check_leader(self) -> bool:
+        """
+        Check if the node is the current swarm leader
+
+        :return: True if host is the leader; False otherwise
+        """
+        info = self._docker_client.info()
+
+        if (
+            "Swarm" not in info or
+            info["Swarm"] == "inactive" or
+            "NodeID" not in info["Swarm"] or
+            info["Swarm"]["NodeID"] == "" or
+            "RemoteManagers" not in info["Swarm"] or
+            info["Swarm"]["RemoteManagers"] is None
+        ):
+            return False
+
+        node_id = info["Swarm"]["NodeID"]
+        manager = False
+
+        for remote_manager in info["Swarm"]["RemoteManagers"]:
+            if remote_manager["NodeID"] == node_id:
+                manager = True
+
+        if manager is False:
+            return False
+
+        inspect = self._docker_client.inspect_node(node_id)
+        leader = False
+
+        if (
+            "Leader" in inspect["ManagerStatus"] and
+            inspect["ManagerStatus"]["Leader"] is True and
+            inspect["ManagerStatus"]["Reachability"] == "reachable"
+        ):
+            leader = True
+
+        if leader is False:
+            return False

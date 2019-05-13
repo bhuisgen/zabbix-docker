@@ -122,6 +122,11 @@ class DockerDiscoveryWorker(threading.Thread):
                     if m is not None:
                         metrics.extend(m)
 
+                if self._config.getboolean("main", "networks") is True:
+                    m = self._discover_networks()
+                    if m is not None:
+                        metrics.extend(m)
+
                 if self._config.getboolean("main", "swarm") is True:
                     if self._config.getboolean("main", "swarm_services") is True:
                         m = self._discover_swarm_services()
@@ -282,49 +287,39 @@ class DockerDiscoveryWorker(threading.Thread):
 
         return metrics
 
+    def _discover_networks(self) -> Optional[List[ZabbixMetric]]:
+        """
+        Discover networks
+
+        :return: the discovery metrics
+        """
+        metrics = []
+        discovery_networks = []
+
+        networks = self._docker_client.networks()
+
+        for network in networks:
+            network_name = network["Name"]
+
+            discovery_networks.append({
+                "{#NAME}": network_name,
+            })
+
+        metrics.append(
+            ZabbixMetric(
+                self._config.get("zabbix", "hostname"),
+                "docker.discovery.networks",
+                json.dumps({"data": discovery_networks})))
+
+        return metrics
+
     def _discover_swarm_services(self) -> Optional[List[ZabbixMetric]]:
         """
         Discover swarm services
 
         :return: the discovery metrics
         """
-        info = self._docker_client.info()
-
-        if (
-            "Swarm" not in info or
-            info["Swarm"] == "inactive" or
-            "NodeID" not in info["Swarm"] or
-            info["Swarm"]["NodeID"] == "" or
-            "RemoteManagers" not in info["Swarm"] or
-            info["Swarm"]["RemoteManagers"] is None
-        ):
-            self._logger.debug("node is not a swarm member")
-
-            return None
-
-        node_id = info["Swarm"]["NodeID"]
-        manager = False
-
-        for remote_manager in info["Swarm"]["RemoteManagers"]:
-            if remote_manager["NodeID"] == node_id:
-                manager = True
-
-        if manager is False:
-            self._logger.debug("node is not a swarm manager")
-
-            return None
-
-        node_info = self._docker_client.inspect_node(node_id)
-        leader = False
-
-        if (
-            "Leader" in node_info["ManagerStatus"] and
-            node_info["ManagerStatus"]["Leader"] is True and
-            node_info["ManagerStatus"]["Reachability"] == "reachable"
-        ):
-            leader = True
-
-        if leader is False:
+        if self._check_leader() is False:
             self._logger.debug("node is not the swarm leader")
 
             return None
@@ -360,43 +355,7 @@ class DockerDiscoveryWorker(threading.Thread):
 
         :return: the discovery metrics
         """
-        info = self._docker_client.info()
-
-        if (
-            "Swarm" not in info or
-            info["Swarm"] == "inactive" or
-            "NodeID" not in info["Swarm"] or
-            info["Swarm"]["NodeID"] == "" or
-            "RemoteManagers" not in info["Swarm"] or
-            info["Swarm"]["RemoteManagers"] is None
-        ):
-            self._logger.debug("node is not a swarm member")
-
-            return None
-
-        node_id = info["Swarm"]["NodeID"]
-        manager = False
-
-        for remote_manager in info["Swarm"]["RemoteManagers"]:
-            if remote_manager["NodeID"] == node_id:
-                manager = True
-
-        if manager is False:
-            self._logger.debug("node is not a swarm manager")
-
-            return None
-
-        node_info = self._docker_client.inspect_node(node_id)
-        leader = False
-
-        if (
-            "Leader" in node_info["ManagerStatus"] and
-            node_info["ManagerStatus"]["Leader"] is True and
-            node_info["ManagerStatus"]["Reachability"] == "reachable"
-        ):
-            leader = True
-
-        if leader is False:
+        if self._check_leader() is False:
             self._logger.debug("node is not the swarm leader")
 
             return None
@@ -427,6 +386,47 @@ class DockerDiscoveryWorker(threading.Thread):
                 json.dumps({"data": discovery_stacks})))
 
         return metrics
+
+    def _check_leader(self) -> bool:
+        """
+        Check if the node is the current swarm leader
+
+        :return: True if host is the leader; False otherwise
+        """
+        info = self._docker_client.info()
+
+        if (
+            "Swarm" not in info or
+            info["Swarm"] == "inactive" or
+            "NodeID" not in info["Swarm"] or
+            info["Swarm"]["NodeID"] == "" or
+            "RemoteManagers" not in info["Swarm"] or
+            info["Swarm"]["RemoteManagers"] is None
+        ):
+            return False
+
+        node_id = info["Swarm"]["NodeID"]
+        manager = False
+
+        for remote_manager in info["Swarm"]["RemoteManagers"]:
+            if remote_manager["NodeID"] == node_id:
+                manager = True
+
+        if manager is False:
+            return False
+
+        inspect = self._docker_client.inspect_node(node_id)
+        leader = False
+
+        if (
+            "Leader" in inspect["ManagerStatus"] and
+            inspect["ManagerStatus"]["Leader"] is True and
+            inspect["ManagerStatus"]["Reachability"] == "reachable"
+        ):
+            leader = True
+
+        if leader is False:
+            return False
 
 
 class DockerDiscoveryEventsPollerWorker(threading.Thread):
