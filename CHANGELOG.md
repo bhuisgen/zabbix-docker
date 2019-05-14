@@ -1,7 +1,11 @@
-## 0.4.0 (2019-05-08)
+## 0.4.0 (2019-05-14)
 
 - add swarm monitoring metrics (services, stacks, configs and secrets)
+- add docker images metrics
+- add docker networks metrics
+- add docker volumes metrics 
 - add option for zabbix send timeout
+- use docker SDK 3.7.2
 
 ## 0.3.2 (2019-03-14)
 
