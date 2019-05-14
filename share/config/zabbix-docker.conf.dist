@@ -15,6 +15,7 @@
 #containers_top = no                        # enable containers processes metrics
 #containers_remote = no                     # enable containers remote metrics
 #events = yes                               # enable events metrics
+#images = yes                               # enable images metrics
 #networks = yes                             # enable networks metrics
 #volumes = yes                              # enable volumes metrics
 #swarm = no                                 # enable swarm metrics
@@ -135,6 +136,16 @@
 #
 
 [events]
+
+#startup = 30                               # startup time (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker images
+#
+
+[images]
 
 #startup = 30                               # startup time (seconds)
 #interval = 60                              # execution interval (seconds)

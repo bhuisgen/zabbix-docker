@@ -9,6 +9,7 @@ containers_stats = no
 containers_top = no
 containers_remote = yes
 events = yes
+images = yes
 networks = yes
 volumes = yes
 swarm = no
@@ -56,6 +57,10 @@ delay = 1:5
 #trappers_timestamp = no
 
 [events]
+#startup = 30
+#interval = 60
+
+[images]
 #startup = 30
 #interval = 60
 
