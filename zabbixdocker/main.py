@@ -18,6 +18,7 @@ from zabbixdocker.services.containers import DockerContainersService, DockerCont
     DockerContainersRemoteService, DockerContainersTopService
 from zabbixdocker.services.discovery import DockerDiscoveryService
 from zabbixdocker.services.events import DockerEventsService
+from zabbixdocker.services.images import DockerImagesService
 from zabbixdocker.services.networks import DockerNetworksService
 from zabbixdocker.services.swarm import DockerSwarmService, DockerSwarmServicesService, DockerSwarmStacksService
 from zabbixdocker.services.volumes import DockerVolumesService
@@ -73,11 +74,12 @@ class Application(object):
         containers_top = no
         containers_remote = no
         events = yes
+        images = yes
         networks = yes
+        volumes = yes
         swarm = no
         swarm_services = yes
         swarm_stacks = no
-        volumes = yes
 
         [docker]
         base_url = unix:///var/run/docker.sock
@@ -120,7 +122,15 @@ class Application(object):
         startup = 30
         interval = 60
 
+        [images]
+        startup = 30
+        interval = 60
+
         [networks]
+        startup = 30
+        interval = 60
+        
+        [volumes]
         startup = 30
         interval = 60
 
@@ -133,10 +143,6 @@ class Application(object):
         interval = 60
         
         [swarm_stacks]
-        startup = 30
-        interval = 60
-        
-        [volumes]
         startup = 30
         interval = 60
         """
@@ -246,6 +252,10 @@ class Application(object):
             events_service = DockerEventsService(self._config, self._stop_event, docker_client, zabbix_sender,
                                                  discovery_service)
             events_service.start()
+
+        if self._config.getboolean("main", "images") is True:
+            images_service = DockerImagesService(self._config, self._stop_event, docker_client, zabbix_sender)
+            images_service.start()
 
         if self._config.getboolean("main", "networks") is True:
             networks_service = DockerNetworksService(self._config, self._stop_event, docker_client, zabbix_sender)
