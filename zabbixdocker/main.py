@@ -91,6 +91,10 @@ class Application(object):
         [discovery]
         startup = 15
         interval = 900
+        containers_labels =
+        networks_labels =
+        swarm_services_labels =
+        swarm_stacks_labels =
         poll_events = yes
         poll_events_interval = 60
         

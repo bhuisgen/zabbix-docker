@@ -164,20 +164,25 @@ class DockerDiscoveryWorker(threading.Thread):
         for container in containers:
             container_id = container["Id"]
             container_name = container["Names"][0][1:]
-            container_stack = ""
-            container_service = ""
 
-            if (
-                "com.docker.stack.namespace" in container["Labels"] and
-                "com.docker.stack.service.name" in container["Labels"]
-            ):
-                container_stack = container["Labels"]["com.docker.stack.namespace"]
-                container_service = container["Labels"]["com.docker.stack.service.name"]
+            macros = dict()
+
+            if "Labels" in container:
+                if (
+                    "com.docker.stack.namespace" in container["Labels"] and
+                    "com.docker.stack.service.name" in container["Labels"]
+                ):
+                    macros["{#STACK}"] = container["Labels"]["com.docker.stack.namespace"]
+                    macros["{#SERVICE}"] = container["Labels"]["com.docker.stack.service.name"]
+
+                for label in str(self._config.get("discovery", "containers_labels")).split(","):
+                    if label in container["Labels"]:
+                        macros["{{#{}}}".format(label.upper())] = container["Labels"][label]
 
             discovery_containers.append({
-                "{#NAME}": container_name,
-                "{#STACK}": container_stack,
-                "{#SERVICE}": container_service
+                **{
+                    "{#NAME}": container_name,
+                }, **macros
             })
 
             if container["Status"].startswith("Up") is False:
@@ -187,7 +192,9 @@ class DockerDiscoveryWorker(threading.Thread):
                 container_stats = self._docker_client.stats(container_id, decode=False, stream=False)
 
                 discovery_containers_stats.append({
-                    "{#NAME}": container_name
+                    **{
+                        "{#NAME}": container_name,
+                    }, **macros
                 })
 
                 if (
@@ -199,15 +206,19 @@ class DockerDiscoveryWorker(threading.Thread):
 
                     for i in range(cpus):
                         discovery_containers_stats_cpus.append({
-                            "{#NAME}": container_name,
-                            "{#CPU}": "%d" % i
+                            **{
+                                "{#NAME}": container_name,
+                                "{#CPU}": "%d" % i,
+                            }, **macros
                         })
 
                 if "networks" in container_stats:
                     for container_stats_network_ifname in list(container_stats["networks"].keys()):
                         discovery_containers_stats_networks.append({
-                            "{#NAME}": container_name,
-                            "{#IFNAME}": container_stats_network_ifname
+                            **{
+                                "{#NAME}": container_name,
+                                "{#IFNAME}": container_stats_network_ifname,
+                            }, **macros
                         })
 
                 if (
@@ -229,12 +240,14 @@ class DockerDiscoveryWorker(threading.Thread):
                                     continue
 
                                 discovery_containers_stats_devices.append({
-                                    "{#NAME}": container_name,
-                                    "{#DEVMAJOR}": container_stats["blkio_stats"]
-                                    ["io_serviced_recursive"][j]["major"],
-                                    "{#DEVMINOR}": container_stats["blkio_stats"]
-                                    ["io_serviced_recursive"][j]["minor"],
-                                    "{#DEVNAME}": match.group(1)
+                                    **{
+                                        "{#NAME}": container_name,
+                                        "{#DEVMAJOR}": container_stats["blkio_stats"]["io_serviced_recursive"][j][
+                                            "major"],
+                                        "{#DEVMINOR}": container_stats["blkio_stats"]["io_serviced_recursive"][j][
+                                            "minor"],
+                                        "{#DEVNAME}": match.group(1)
+                                    }, **macros
                                 })
 
             if self._config.getboolean("main", "containers_top"):
@@ -242,9 +255,11 @@ class DockerDiscoveryWorker(threading.Thread):
                 if "Processes" in container_top:
                     for j in range(len(container_top["Processes"])):
                         discovery_containers_top.append({
-                            "{#NAME}": container_name,
-                            "{#PID}": container_top["Processes"][j][1],
-                            "{#CMD}": container_top["Processes"][j][7]
+                            **{
+                                "{#NAME}": container_name,
+                                "{#PID}": container_top["Processes"][j][1],
+                                "{#CMD}": container_top["Processes"][j][7],
+                            }, **macros
                         })
 
         metrics.append(
@@ -301,8 +316,17 @@ class DockerDiscoveryWorker(threading.Thread):
         for network in networks:
             network_name = network["Name"]
 
+            macros = dict()
+
+            if "Labels" in network:
+                for label in str(self._config.get("discovery", "networks_labels")).split(","):
+                    if label in network["Labels"]:
+                        macros["{{#{}}}".format(label.upper())] = network["Labels"][label]
+
             discovery_networks.append({
-                "{#NAME}": network_name,
+                **{
+                    "{#NAME}": network_name,
+                }, **macros
             })
 
         metrics.append(
@@ -331,14 +355,20 @@ class DockerDiscoveryWorker(threading.Thread):
 
         for service in services:
             service_name = service["Spec"]["Name"]
-            service_stack = ""
+
+            macros = dict()
 
             if "com.docker.stack.namespace" in service["Spec"]["Labels"]:
-                service_stack = service["Spec"]["Labels"]["com.docker.stack.namespace"]
+                macros["{#STACK}"] = service["Spec"]["Labels"]["com.docker.stack.namespace"]
+
+            for label in str(self._config.get("discovery", "swarm_services_labels")).split(","):
+                if label in service["Spec"]["Labels"]:
+                    macros["{{#{}}}".format(label.upper())] = service["Spec"]["Labels"][label]
 
             discovery_services.append({
-                "{#NAME}": service_name,
-                "{#STACK}": service_stack
+                **{
+                    "{#NAME}": service_name,
+                }, **macros
             })
 
         metrics.append(
@@ -367,16 +397,29 @@ class DockerDiscoveryWorker(threading.Thread):
             "label": "com.docker.stack.namespace"
         })
 
+        #
+        # new
+        #
+
         stacks = set()
+        stacks_macros = dict()
 
         for service in services:
             stack_name = service["Spec"]["Labels"]["com.docker.stack.namespace"]
 
             stacks.add(stack_name)
 
+            stacks_macros[stack_name] = dict()
+
+            for label in str(self._config.get("discovery", "swarm_stacks_labels")).split(","):
+                if label in service["Spec"]["Labels"]:
+                    stacks_macros[stack_name]["{{#{}}}".format(label.upper())] = service["Spec"]["Labels"][label]
+
         for stack_name in stacks:
             discovery_stacks.append({
-                "{#NAME}": stack_name,
+                **{
+                    "{#NAME}": stack_name,
+                }, **stacks_macros[stack_name]
             })
 
         metrics.append(
