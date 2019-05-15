@@ -117,6 +117,11 @@ class DockerSwarmWorker(threading.Thread):
                 for node in nodes:
                     if node["Spec"]["Role"] == "manager":
                         nodes_managers += 1
+
+                        if node["ManagerStatus"]["Reachability"] == "reachable":
+                            nodes_managers_reachable += 1
+                        else:
+                            nodes_managers_unreachable += 1
                     else:
                         nodes_workers += 1
 
@@ -124,11 +129,6 @@ class DockerSwarmWorker(threading.Thread):
                         nodes_available += 1
                     else:
                         nodes_unavailable += 1
-
-                    if node["Spec"]["Role"] == "manager" and node["ManagerStatus"]["Reachability"] == "reachable":
-                        nodes_managers_reachable += 1
-                    else:
-                        nodes_managers_unreachable += 1
 
                 metrics.append(
                     ZabbixMetric(
