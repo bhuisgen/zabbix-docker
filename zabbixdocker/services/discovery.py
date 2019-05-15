@@ -167,7 +167,10 @@ class DockerDiscoveryWorker(threading.Thread):
 
             macros = dict()
 
-            if "Labels" in container:
+            if (
+                "Labels" in container and
+                container["Labels"] is not None
+            ):
                 if (
                     "com.docker.stack.namespace" in container["Labels"] and
                     "com.docker.stack.service.name" in container["Labels"]
@@ -318,7 +321,10 @@ class DockerDiscoveryWorker(threading.Thread):
 
             macros = dict()
 
-            if "Labels" in network:
+            if (
+                "Labels" in network and
+                network["Labels"] is not None
+            ):
                 for label in str(self._config.get("discovery", "networks_labels")).split(","):
                     if label in network["Labels"]:
                         macros["{{#{}}}".format(label.upper())] = network["Labels"][label]
