@@ -62,10 +62,16 @@
 
 #startup = 15                               # startup time (seconds)
 #interval = 900                             # execution interval (seconds)
-#containers_labels =                        # list of labels to push as macros from containers at discovery
-#networks_labels =                          # list of labels to push as macros from networks at discovery
-#swarm_services_labels =                    # list of labels to push as macros from swarm services at discovery
-#swarm_stacks_labels =                      # list of labels to push as macros from swarm stacks at discovery
+#containers_labels =                        # list of label names to push as user macros for containers
+                                            #
+                                            # Ex: my.docker.label1,my.docker.label2
+                                            #
+                                            # The label values will be converted into user macros {#MY.LABEL.1} and
+                                            # {#MY.LABEL.2}
+                                            #
+#networks_labels =                          # list of label names to push as user macros for networks
+#swarm_services_labels =                    # list of label names to push as user macros for swarm services
+#swarm_stacks_labels =                      # list of label names to push as user macros for swarm stacks
 #poll_events = yes                          # poll docker events for containers discovery
 #poll_events_interval = 60                  # poll interval
 
