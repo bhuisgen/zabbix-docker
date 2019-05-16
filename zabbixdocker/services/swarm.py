@@ -107,14 +107,26 @@ class DockerSwarmWorker(threading.Thread):
                 nodes = self._docker_client.nodes()
 
                 nodes_total = len(nodes)
-                nodes_managers = 0
-                nodes_workers = 0
+                nodes_status_ready = 0
+                nodes_status_down = 0
                 nodes_available = 0
                 nodes_unavailable = 0
+                nodes_managers = 0
+                nodes_workers = 0
                 nodes_managers_reachable = 0
                 nodes_managers_unreachable = 0
 
                 for node in nodes:
+                    if node["Status"]["State"] == "ready":
+                        nodes_status_ready += 1
+                    else:
+                        nodes_status_down += 1
+
+                    if node["Spec"]["Availability"] == "active":
+                        nodes_available += 1
+                    else:
+                        nodes_unavailable += 1
+
                     if node["Spec"]["Role"] == "manager":
                         nodes_managers += 1
 
@@ -124,11 +136,6 @@ class DockerSwarmWorker(threading.Thread):
                             nodes_managers_unreachable += 1
                     else:
                         nodes_workers += 1
-
-                    if node["Spec"]["Availability"] == "active":
-                        nodes_available += 1
-                    else:
-                        nodes_unavailable += 1
 
                 metrics.append(
                     ZabbixMetric(
@@ -140,15 +147,15 @@ class DockerSwarmWorker(threading.Thread):
                 metrics.append(
                     ZabbixMetric(
                         self._config.get("zabbix", "hostname_cluster"),
-                        "docker.swarm.nodes.managers",
-                        "%d" % nodes_managers
+                        "docker.swarm.nodes.status_ready",
+                        "%d" % nodes_status_ready
                     )
                 )
                 metrics.append(
                     ZabbixMetric(
                         self._config.get("zabbix", "hostname_cluster"),
-                        "docker.swarm.nodes.workers",
-                        "%d" % nodes_workers
+                        "docker.swarm.nodes.status_down",
+                        "%d" % nodes_status_down
                     )
                 )
                 metrics.append(
@@ -163,6 +170,20 @@ class DockerSwarmWorker(threading.Thread):
                         self._config.get("zabbix", "hostname_cluster"),
                         "docker.swarm.nodes.unavailable",
                         "%d" % nodes_unavailable
+                    )
+                )
+                metrics.append(
+                    ZabbixMetric(
+                        self._config.get("zabbix", "hostname_cluster"),
+                        "docker.swarm.nodes.managers",
+                        "%d" % nodes_managers
+                    )
+                )
+                metrics.append(
+                    ZabbixMetric(
+                        self._config.get("zabbix", "hostname_cluster"),
+                        "docker.swarm.nodes.workers",
+                        "%d" % nodes_workers
                     )
                 )
                 metrics.append(
