@@ -1,9 +1,7 @@
-## 0.4.0 (2019-05-14)
+## 0.4.0 (2019-05-17)
 
-- add swarm services, stacks, configs and secrets metrics
-- add docker images metrics
-- add docker networks metrics
-- add docker volumes metrics
+- add swarm nodes, services, stacks, configs and secrets metrics
+- add docker images, networks and volumes metrics
 - add options to send custom labels as user macros during resources discovery  
 - add option for zabbix send timeout
 - use docker SDK 3.7.2

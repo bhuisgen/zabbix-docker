@@ -32,7 +32,7 @@ Some global regular expressions must be created for the discovery rules:
 |----------------------------------------------|--------------------|------------------------------|-----------------------------------|
 | Docker mount points for discovery            | [Result is FALSE]  | ^/etc                        | Container mountpoints to ignore   |
 | Docker network interfaces for discovery      | [Result is FALSE]  | ^veth                        | Host virtual interfaces to ignore |
-| Docker container names for discovery         | [Result is FALSE]  | ^(k8\|ucp-kube)              | Ignore kubernetes CTs             |
+| Docker container names for discovery         | [Result is FALSE]  | ^(k8\|ucp-kube\|ucp-pause)   | Ignore kubernetes CTs             |
 | Docker container process names for discovery | [Result is TRUE]   | .+                           |                                   |
 | Docker network names for discovery           | [Result is TRUE]   | .+                           |                                   |
 | Docker swarm service names for discovery     | [Result is FALSE]  | ^(ucp-.+-win\|ucp-.+-s390x)$ | Ignore unused UCP services        |
