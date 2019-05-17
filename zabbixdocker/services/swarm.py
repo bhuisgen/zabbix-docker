@@ -423,6 +423,17 @@ class DockerSwarmServicesWorker(threading.Thread):
                             )
                         )
 
+                    if "UpdateStatus" in service:
+                        service_update_status_state = service["UpdateStatus"]["State"]
+
+                        metrics.append(
+                            ZabbixMetric(
+                                self._config.get("zabbix", "hostname_cluster"),
+                                "docker.swarm.services.update_status.state[%s]" % service_name,
+                                "%s" % service_update_status_state
+                            )
+                        )
+
                     service_tasks = self._docker_client.tasks(filters={
                         "service": service_id,
                         "desired-state": ["running"]
