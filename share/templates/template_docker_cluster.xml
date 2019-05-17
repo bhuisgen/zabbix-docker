@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.0</version>
-    <date>2019-05-16T08:27:01Z</date>
+    <date>2019-05-17T12:33:12Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -2482,7 +2482,7 @@
             <correlation_tag/>
             <url/>
             <status>0</status>
-            <priority>2</priority>
+            <priority>1</priority>
             <description/>
             <type>0</type>
             <manual_close>0</manual_close>
@@ -2498,7 +2498,7 @@
             <correlation_tag/>
             <url/>
             <status>0</status>
-            <priority>2</priority>
+            <priority>1</priority>
             <description/>
             <type>0</type>
             <manual_close>0</manual_close>
