@@ -153,7 +153,7 @@ class Application(object):
 
         self._config = configparser.ConfigParser()
         self._config.read_string(config_default)
-
+        
         if "file" in args and args.file:
             self._config.read(args.file)
         else:

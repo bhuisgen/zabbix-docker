@@ -62,16 +62,24 @@
 
 #startup = 15                               # startup time (seconds)
 #interval = 900                             # execution interval (seconds)
-#containers_labels =                        # list of label names to push as user macros for containers
+#containers_labels =                        # list of labels to filter and to push as user macros
+#networks_labels =                          # list of labels to filter and to push as user macros
+#swarm_services_labels =                    # list of labels to filter and to push as user macros
+#swarm_stacks_labels =                      # list of labels to filter and to push as user macros
                                             #
-                                            # Ex: my.docker.label1,my.docker.label2
+                                            # containers_labels=my.docker.label1,my.docker.label2
                                             #
                                             # The label values will be converted into user macros {#MY.LABEL.1} and
-                                            # {#MY.LABEL.2}
+                                            # {#MY.LABEL.2}. You can filter by label value like this:
                                             #
-#networks_labels =                          # list of label names to push as user macros for networks
-#swarm_services_labels =                    # list of label names to push as user macros for swarm services
-#swarm_stacks_labels =                      # list of label names to push as user macros for swarm stacks
+                                            # containers_labels=my.docker.flag=true
+                                            #
+                                            # In case of missing label, the default is to skip resource from discovery
+                                            # To not skip it, add a default value like this:
+                                            #
+                                            # containers_labels=my.docker.flag=true=false
+                                            # containers_labels=my.docker.count==0
+                                            #
 #poll_events = yes                          # poll docker events for containers discovery
 #poll_events_interval = 60                  # poll interval
 

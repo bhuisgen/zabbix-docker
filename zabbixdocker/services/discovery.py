@@ -167,20 +167,46 @@ class DockerDiscoveryWorker(threading.Thread):
 
             macros = dict()
 
-            if (
-                "Labels" in container and
-                container["Labels"] is not None
-            ):
-                if (
-                    "com.docker.stack.namespace" in container["Labels"] and
-                    "com.docker.stack.service.name" in container["Labels"]
-                ):
-                    macros["{#STACK}"] = container["Labels"]["com.docker.stack.namespace"]
-                    macros["{#SERVICE}"] = container["Labels"]["com.docker.stack.service.name"]
+            if self._config.get("discovery", "containers_labels") != "":
+                skip = True
 
                 for label in str(self._config.get("discovery", "containers_labels")).split(","):
-                    if label in container["Labels"]:
-                        macros["{{#{}}}".format(label.upper())] = container["Labels"][label]
+                    items = label.split("=", maxsplit=2)
+
+                    label_name = items[0]
+                    label_value = items[1] if len(items) >= 2 else ""
+                    label_default = items[2] if len(items) == 3 else ""
+
+                    if (
+                        "Labels" in container and
+                        container["Labels"] is not None and
+                        label_name in container["Labels"]
+                    ):
+                        skip = False
+
+                        if (
+                            label_value != "" and
+                            container["Labels"][label_name] == label_value
+                        ):
+                            macros["{{#{}}}".format(label_name.upper())] = label_value
+                        else:
+                            macros["{{#{}}}".format(label_name.upper())] = container["Labels"][label_name]
+                    elif label_default != "":
+                        skip = False
+
+                        macros["{{#{}}}".format(label_name.upper())] = label_default
+
+                if skip is True:
+                    continue
+
+            if (
+                "Labels" in container and
+                container["Labels"] is not None and
+                "com.docker.stack.namespace" in container["Labels"] and
+                "com.docker.stack.service.name" in container["Labels"]
+            ):
+                macros["{#STACK}"] = container["Labels"]["com.docker.stack.namespace"]
+                macros["{#SERVICE}"] = container["Labels"]["com.docker.stack.service.name"]
 
             discovery_containers.append({
                 **{
@@ -321,13 +347,37 @@ class DockerDiscoveryWorker(threading.Thread):
 
             macros = dict()
 
-            if (
-                "Labels" in network and
-                network["Labels"] is not None
-            ):
+            if self._config.get("discovery", "networks_labels") != "":
+                skip = True
+
                 for label in str(self._config.get("discovery", "networks_labels")).split(","):
-                    if label in network["Labels"]:
-                        macros["{{#{}}}".format(label.upper())] = network["Labels"][label]
+                    items = label.split("=", maxsplit=2)
+
+                    label_name = items[0]
+                    label_value = items[1] if len(items) >= 2 else ""
+                    label_default = items[2] if len(items) == 3 else ""
+
+                    if (
+                        "Labels" in network and
+                        network["Labels"] is not None and
+                        label_name in network["Labels"]
+                    ):
+                        skip = False
+
+                        if (
+                            label_value != "" and
+                            network["Labels"][label_name] == label_value
+                        ):
+                            macros["{{#{}}}".format(label_name.upper())] = label_value
+                        else:
+                            macros["{{#{}}}".format(label_name.upper())] = network["Labels"][label_name]
+                    elif label_default != "":
+                        skip = False
+
+                        macros["{{#{}}}".format(label_name.upper())] = label_default
+
+                if skip is True:
+                    continue
 
             discovery_networks.append({
                 **{
@@ -364,12 +414,36 @@ class DockerDiscoveryWorker(threading.Thread):
 
             macros = dict()
 
+            if self._config.get("discovery", "swarm_services_labels") != "":
+                skip = True
+
+                for label in str(self._config.get("discovery", "swarm_services_labels")).split(","):
+                    items = label.split("=", maxsplit=2)
+
+                    label_name = items[0]
+                    label_value = items[1] if len(items) >= 2 else ""
+                    label_default = items[2] if len(items) == 3 else ""
+
+                    if label_name in service["Spec"]["Labels"]:
+                        skip = False
+
+                        if (
+                            label_value != "" and
+                            service["Spec"]["Labels"][label_name] == label_value
+                        ):
+                            macros["{{#{}}}".format(label_name.upper())] = label_value
+                        else:
+                            macros["{{#{}}}".format(label_name.upper())] = service["Spec"]["Labels"][label_name]
+                    elif label_default != "":
+                        skip = False
+
+                        macros["{{#{}}}".format(label_name.upper())] = label_default
+
+                if skip is True:
+                    continue
+
             if "com.docker.stack.namespace" in service["Spec"]["Labels"]:
                 macros["{#STACK}"] = service["Spec"]["Labels"]["com.docker.stack.namespace"]
-
-            for label in str(self._config.get("discovery", "swarm_services_labels")).split(","):
-                if label in service["Spec"]["Labels"]:
-                    macros["{{#{}}}".format(label.upper())] = service["Spec"]["Labels"][label]
 
             discovery_services.append({
                 **{
@@ -403,23 +477,44 @@ class DockerDiscoveryWorker(threading.Thread):
             "label": "com.docker.stack.namespace"
         })
 
-        #
-        # new
-        #
-
         stacks = set()
         stacks_macros = dict()
 
         for service in services:
             stack_name = service["Spec"]["Labels"]["com.docker.stack.namespace"]
 
+            macros = dict()
+
+            if self._config.get("discovery", "swarm_stacks_labels") != "":
+                skip = True
+
+                for label in str(self._config.get("discovery", "swarm_stacks_labels")).split(","):
+                    items = label.split("=", maxsplit=2)
+
+                    label_name = items[0]
+                    label_value = items[1] if len(items) >= 2 else ""
+                    label_default = items[2] if len(items) == 3 else ""
+
+                    if label_name in service["Spec"]["Labels"]:
+                        skip = False
+
+                        if (
+                            label_value != "" and
+                            service["Spec"]["Labels"][label_name] == label_value
+                        ):
+                            macros["{{#{}}}".format(label_name.upper())] = label_value
+                        else:
+                            macros["{{#{}}}".format(label_name.upper())] = service["Spec"]["Labels"][label_name]
+                    elif label_default != "":
+                        skip = False
+
+                        macros["{{#{}}}".format(label_name.upper())] = label_default
+
+                if skip is True:
+                    continue
+
             stacks.add(stack_name)
-
-            stacks_macros[stack_name] = dict()
-
-            for label in str(self._config.get("discovery", "swarm_stacks_labels")).split(","):
-                if label in service["Spec"]["Labels"]:
-                    stacks_macros[stack_name]["{{#{}}}".format(label.upper())] = service["Spec"]["Labels"][label]
+            stacks_macros[stack_name] = macros
 
         for stack_name in stacks:
             discovery_stacks.append({
