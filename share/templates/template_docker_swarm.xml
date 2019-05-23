@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.0</version>
-    <date>2019-05-17T12:34:10Z</date>
+    <date>2019-05-23T12:11:22Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -2614,7 +2614,7 @@
                             <tags>
                                 <tag>
                                     <tag>DOCKER_STACK</tag>
-                                    <value>{#STACK}</value>
+                                    <value>{#NAME}</value>
                                 </tag>
                             </tags>
                         </trigger_prototype>
@@ -2635,7 +2635,7 @@
                             <tags>
                                 <tag>
                                     <tag>DOCKER_STACK</tag>
-                                    <value>{#STACK}</value>
+                                    <value>{#NAME}</value>
                                 </tag>
                             </tags>
                         </trigger_prototype>
