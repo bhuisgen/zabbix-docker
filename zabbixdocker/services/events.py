@@ -1,20 +1,33 @@
 from __future__ import division
 
+import configparser
 import datetime
 import logging
 import queue
 import threading
 import time
 
-import pyzabbix
+import docker
+
+from pyzabbix import ZabbixMetric, ZabbixSender
+
+from zabbixdocker.services.discovery import DockerDiscoveryService
 
 
 class DockerEventsService(threading.Thread):
-    """This class implements the events service thread"""
+    """ This class implements the service which send docker events """
 
-    def __init__(self, config, stop_event, docker_client, zabbix_sender, discovery_service):
-        """Initialize the thread"""
+    def __init__(self, config: configparser.ConfigParser, stop_event: threading.Event, docker_client: docker.APIClient,
+                 zabbix_sender: ZabbixSender, discovery_service: DockerDiscoveryService):
+        """
+        Initialize an instance
 
+        :param config: the configuration parser
+        :param stop_event: the event to stop execution
+        :param docker_client: the docker client
+        :param zabbix_sender: the zabbix sender
+        :param discovery_service: the discovery service
+        """
         super(DockerEventsService, self).__init__()
         self._logger = logging.getLogger(self.__class__.__name__)
         self._workers = []
@@ -26,8 +39,9 @@ class DockerEventsService(threading.Thread):
         self._discovery_service = discovery_service
 
     def run(self):
-        """Execute the thread"""
-
+        """
+        Execute the thread
+        """
         worker = DockerEventsPollerWorker(self._config, self._docker_client, self._zabbix_sender, self._events_queue)
         worker.setDaemon(True)
         self._workers.append(worker)
@@ -41,26 +55,33 @@ class DockerEventsService(threading.Thread):
             worker.start()
 
         while True:
-            self.execute()
+            self._execute()
 
             if self._stop_event.wait(self._config.getint("events", "interval")):
                 break
 
         self._logger.info("service stopped")
 
-    def execute(self):
-        """Execute the service"""
-
+    def _execute(self):
+        """
+        Execute the service
+        """
         self._logger.debug("requesting service execution")
         self._events_queue.put("metrics")
 
 
 class DockerEventsPollerWorker(threading.Thread):
-    """This class implements a events poller worker thread"""
+    """ This class implements a events worker thread """
 
-    def __init__(self, config, docker_client, zabbix_sender, events_queue):
-        """Intialize the thread"""
-
+    def __init__(self, config: configparser.ConfigParser, docker_client: docker.APIClient, zabbix_sender: ZabbixSender,
+                 events_queue: queue.Queue):
+        """
+        Initialize the instance
+        :param config: the configuration parser
+        :param docker_client: the docker client
+        :param zabbix_sender: the zabbix sender
+        :param events_queue: the events queue
+        """
         super(DockerEventsPollerWorker, self).__init__()
         self._logger = logging.getLogger(self.__class__.__name__)
         self._config = config
@@ -69,8 +90,9 @@ class DockerEventsPollerWorker(threading.Thread):
         self._events_queue = events_queue
 
     def run(self):
-        """Execute the thread"""
-
+        """
+        Execute the thread
+        """
         until = datetime.datetime.utcnow() - datetime.timedelta(seconds=1)
 
         while True:
@@ -122,52 +144,52 @@ class DockerEventsPollerWorker(threading.Thread):
                 clock = int(time.time())
 
                 metrics.append(
-                    pyzabbix.ZabbixMetric(
+                    ZabbixMetric(
                         self._config.get("zabbix", "hostname"),
                         "docker.events[container,create]",
-                        events_container_create,
+                        "%d" % events_container_create,
                         clock))
 
                 metrics.append(
-                    pyzabbix.ZabbixMetric(
+                    ZabbixMetric(
                         self._config.get("zabbix", "hostname"),
                         "docker.events[container,start]",
-                        events_container_start,
+                        "%d" % events_container_start,
                         clock))
 
                 metrics.append(
-                    pyzabbix.ZabbixMetric(
+                    ZabbixMetric(
                         self._config.get("zabbix", "hostname"),
                         "docker.events[container,die]",
-                        events_container_die,
+                        "%d" % events_container_die,
                         clock))
 
                 metrics.append(
-                    pyzabbix.ZabbixMetric(
+                    ZabbixMetric(
                         self._config.get("zabbix", "hostname"),
                         "docker.events[container,oom]",
-                        events_container_oom,
+                        "%d" % events_container_oom,
                         clock))
 
                 metrics.append(
-                    pyzabbix.ZabbixMetric(
+                    ZabbixMetric(
                         self._config.get("zabbix", "hostname"),
                         "docker.events[container,stop]",
-                        events_container_stop,
+                        "%d" % events_container_stop,
                         clock))
 
                 metrics.append(
-                    pyzabbix.ZabbixMetric(
+                    ZabbixMetric(
                         self._config.get("zabbix", "hostname"),
                         "docker.events[container,kill]",
-                        events_container_kill,
+                        "%d" % events_container_kill,
                         clock))
 
                 metrics.append(
-                    pyzabbix.ZabbixMetric(
+                    ZabbixMetric(
                         self._config.get("zabbix", "hostname"),
                         "docker.events[container,destroy]",
-                        events_container_destroy,
+                        "%d" % events_container_destroy,
                         clock))
 
                 if len(metrics) > 0:
@@ -177,4 +199,3 @@ class DockerEventsPollerWorker(threading.Thread):
                 self._logger.error("failed to send events metrics")
 
                 pass
-

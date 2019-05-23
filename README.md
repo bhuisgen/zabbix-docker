@@ -6,8 +6,8 @@ Boris HUISGEN <bhuisgen@hbis.fr>
 
 ## Introduction
 
-Zabbix-docker is an agent which monitors the local docker engine, gets his metrics and sends them to a Zabbix server or
-proxy.
+Zabbix-docker is an agent which monitors a docker engine, getting his metrics and sending them directly to a Zabbix 
+server or a Zabbix proxy. You can monitor a single docker engine or a swarm cluster.
 
 ## Setup
 
@@ -17,44 +17,37 @@ Install the required python dependencies:
 
 ## Configuration
 
+Add the required templates on your Zabbix server from the *docs/zabbix/templates* directory:
+
+- *template_docker_host.xml*
+- *template_docker_engine.xml*
+- *template_docker_manager.xml*
+- *template_docker_cluster.xml*
+
+For more information on these templates, read the following [documentation](doc/TEMPLATES.md) 
+
+Some global regular expressions must be created for the discovery rules:
+
+| Name                                         | Expression type    | Expression                   | Note                              |
+|----------------------------------------------|--------------------|------------------------------|-----------------------------------|
+| Docker mount points for discovery            | [Result is FALSE]  | ^/etc                        | Container mountpoints to ignore   |
+| Docker network interfaces for discovery      | [Result is FALSE]  | ^veth                        | Host virtual interfaces to ignore |
+| Docker container names for discovery         | [Result is FALSE]  | ^(k8\|ucp-kube\|ucp-pause)   | Ignore kubernetes CTs             |
+| Docker container process names for discovery | [Result is TRUE]   | .+                           |                                   |
+| Docker network names for discovery           | [Result is TRUE]   | .+                           |                                   |
+| Docker swarm service names for discovery     | [Result is FALSE]  | ^(ucp-.+-win\|ucp-.+-s390x)$ | Ignore unused UCP services        |
+| Docker swarm stack names for discovery       | [Result is TRUE]   | .+                           |                                   |
+
+## Usage
+
 Create the configuration file and configure it:
 
     # mkdir -p /etc/zabbix-docker
-    # cp docs/zabbix-docker.conf.dist /etc/zabbix-docker/zabbix-docker.conf
+    # cp share/config/zabbix-docker.conf.dist /etc/zabbix-docker/zabbix-docker.conf
     # vim /etc/zabbix-docker/zabbix-docker.conf
 
-## Running
+For more information on the configuration settings, read the following [documentation](doc/CONFIG.md)
 
-You can run the agent:
+You can now run the agent:
 
     # ./bin/zabbix-docker
-    
-### Zabbix server
-
-#### Templates
-
-You need to import all templates from *docs/zabbix/templates* directory:
-
-- *template_docker_host.xml*: template for host metrics (like Template OS Linux)
-- *template_docker_engine.xml*: template for docker metrics (with optinal discoveries)
-- *template_docker_cluster.xml*: template for aggregated docker metrics by host groups
-
-#### Regular expressions
-
-Some global regular expressions must be created to customize metrics discoveries:
-
-* Docker mount points for discovery: Expression type: [Result is FALSE], Expression: ^/etc 
-
-This is necesseray to exclude all mounts binded by Docker.
-
-* Docker network interfaces for discovery: Expression type: [Result is FALSE] Expression: ^veth
-
-This is necesseray to exclude all host network interfaces managed by Docker.
-
-* Docker container names for discovery: Expression type: [Result is TRUE] Expression: .+
-
-You can exclude some named containers.
-
-* Docker container process names for discovery: Expression type: [Result is TRUE] Expression: .+
-
-You can exclude some container processes.

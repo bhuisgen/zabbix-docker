@@ -1,15 +1,20 @@
 # zabbix-docker.conf
 
 [main]
-
 log = yes
 log_level = info
 #rootfs = /
 containers = yes
-containers_stats = yes
+containers_stats = no
 containers_top = no
 containers_remote = yes
 events = yes
+images = yes
+networks = yes
+volumes = yes
+swarm = no
+swarm_services = yes
+swarm_stacks = no
 
 [docker]
 #base_url = unix:///var/run/docker.sock
@@ -18,15 +23,21 @@ events = yes
 [zabbix]
 #server =
 #hostname =
+#hostname_cluster =
+#timeout = 10
 
 [discovery]
 #startup = 15
-#interval = 300
+#interval = 900
+#containers_labels =
+#networks_labels =
+#swarm_services_labels =
+#swarm_stacks_labels =
 #poll_events = yes
-#poll_events_interval = 15
+#poll_events_interval = 60
 
 [containers]
-#startup = 15
+#startup = 30
 #interval = 60
 
 [containers_stats]
@@ -40,8 +51,8 @@ events = yes
 #workers = 10
 
 [containers_remote]
-startup = 5
-interval = 60
+#startup = 30
+#interval = 60
 workers = 1
 path = /etc/zabbix/scripts/trapper:/etc/zabbix/discovery/trapper
 delay = 1:5
@@ -50,5 +61,29 @@ delay = 1:5
 #trappers_timestamp = no
 
 [events]
+#startup = 30
+#interval = 60
+
+[images]
+#startup = 30
+#interval = 60
+
+[networks]
+#startup = 30
+#interval = 60
+
+[volumes]
+#startup = 30
+#interval = 60
+
+[swarm]
+#startup = 30
+#interval = 60
+
+[swarm_services]
+#startup = 30
+#interval = 60
+
+[swarm_stacks]
 #startup = 30
 #interval = 60

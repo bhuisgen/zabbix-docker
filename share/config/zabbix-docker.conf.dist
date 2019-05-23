@@ -1,0 +1,220 @@
+# zabbix-docker.conf
+
+
+#
+# Main section
+#
+
+[main]
+
+#log = yes                                  # enable log messages
+#log_level = error                          # log level (error/warning/info/debug)
+#rootfs = /                                 # path to the docker host rootfs
+#containers = yes                           # enable containers metrics
+#containers_stats = yes                     # enable containers statistics metrics
+#containers_top = no                        # enable containers processes metrics
+#containers_remote = no                     # enable containers remote metrics
+#events = yes                               # enable events metrics
+#images = yes                               # enable images metrics
+#networks = yes                             # enable networks metrics
+#volumes = yes                              # enable volumes metrics
+#swarm = no                                 # enable swarm metrics
+#swarm_services = yes                       # enable swarm services metrics
+#swarm_stacks = no                          # enable swarm stacks metrics
+
+
+#
+# Docker client
+#
+
+[docker]
+
+#base_url = unix:///var/run/docker.sock     # docker api url
+#timeout = 5                                # docker api timeout
+
+
+#
+# Zabbix client
+#
+
+[zabbix]
+
+#server =                                   # zabbix server to send metrics (HOST:PORT)
+                                            #
+                                            # By default use the value in /etc/zabbix/zabbix_agentd.conf.
+                                            #
+#hostname =                                 # hostname to send metrics.
+                                            #
+                                            # By default use the system hostname.
+                                            #
+#hostname_cluster =                         # hostname to send cluster metrics.
+                                            #
+                                            # This option is required to monitor cluster metrics.
+                                            #
+#timeout = 10                               # timeout to send metrics
+
+
+#
+# Docker containers discovery service
+#
+
+[discovery]
+
+#startup = 15                               # startup time (seconds)
+#interval = 900                             # execution interval (seconds)
+#containers_labels =                        # list of labels to filter and to push as user macros
+#networks_labels =                          # list of labels to filter and to push as user macros
+#swarm_services_labels =                    # list of labels to filter and to push as user macros
+#swarm_stacks_labels =                      # list of labels to filter and to push as user macros
+                                            #
+                                            # containers_labels=my.docker.label1,my.docker.label2
+                                            #
+                                            # The label values will be converted into user macros {#MY.LABEL.1} and
+                                            # {#MY.LABEL.2}. You can filter by label value like this:
+                                            #
+                                            # containers_labels=my.docker.flag=true
+                                            #
+                                            # In case of missing label, the default is to skip resource from discovery
+                                            # To not skip it, add a default value like this:
+                                            #
+                                            # containers_labels=my.docker.flag=true=false
+                                            # containers_labels=my.docker.count==0
+                                            #
+#poll_events = yes                          # poll docker events for containers discovery
+#poll_events_interval = 60                  # poll interval
+
+
+#
+# Docker containers metrics
+#
+
+[containers]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker containers statistics metrics
+#
+
+[containers_stats]
+
+#startup = 30                               # startup time (seconds)
+#interval = 60                              # execution interval (seconds)
+#workers = 10                               # number of worker threads
+
+
+#
+# Docker containers processes metrics
+#
+
+[containers_top]
+
+#startup = 30                               # startup time (seconds)
+#interval = 60                              # execution interval (seconds)
+#workers = 10                               # number of worker threads
+
+
+#
+# Docker containers remote execution
+#
+
+[containers_remote]
+
+#startup = 30                               # startup time (seconds)
+#interval = 60                              # execution interval (seconds)
+#workers = 10                               # number of worker threads
+#path = /etc/zabbix/scripts/trapper         # paths of directories/files to execute remotely
+                                            #
+                                            # path = /etc/zabbix/scripts/trapper:/script.sh:/usr/local/bin/foo
+                                            #
+                                            # In case of a directory his execution is not recursive. The execution bit
+                                            # must be set on each file to be run.
+                                            #
+#delay = 1                                  # delay execution (step count)
+                                            #
+                                            # With the following configuration:
+                                            #
+                                            # interval=60
+                                            # path=/etc/zabbix/scripts/trapper:/etc/zabbix/discovery/trapper:/other
+                                            # delay=1:15
+                                            #
+                                            # All executable files in /etc/zabbix/scripts/trapper will be run every
+                                            # 60 s (60*1), every 15 m (60*15) for /etc/zabbix/discovery/trapper and
+                                            # and every 60 s (1 step) for /usr/local/bin/foo as the default delay
+                                            # is 1.
+                                            #
+#user = root                                # remote user for executing files inside containers
+#trappers = yes                             # enable parsing of commands output for zabbix trapper metrics
+#trappers_timestamp = no                    # parse lines with timestamps
+
+
+#
+# Docker events
+#
+
+[events]
+
+#startup = 30                               # startup time (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker images
+#
+
+[images]
+
+#startup = 30                               # startup time (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker networks metrics
+#
+
+[networks]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker volumes metrics
+#
+
+[volumes]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker swarm metrics
+#
+
+[swarm]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker swarm services metrics
+#
+
+[swarm_services]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker swarm stacks metrics
+#
+
+[swarm_stacks]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
