@@ -83,10 +83,10 @@ class Application(object):
 
         [docker]
         base_url = unix:///var/run/docker.sock
-        timeout = 5
+        timeout = 60
 
         [zabbix]
-        timeout = 10
+        timeout = 60
 
         [discovery]
         startup = 15
