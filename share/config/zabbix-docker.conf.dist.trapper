@@ -18,13 +18,13 @@ swarm_stacks = no
 
 [docker]
 #base_url = unix:///var/run/docker.sock
-#timeout = 5
+#timeout = 60
 
 [zabbix]
 #server =
 #hostname =
 #hostname_cluster =
-#timeout = 10
+#timeout = 60
 
 [discovery]
 #startup = 15
