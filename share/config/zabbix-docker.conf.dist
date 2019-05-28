@@ -30,7 +30,7 @@
 [docker]
 
 #base_url = unix:///var/run/docker.sock     # docker api url
-#timeout = 5                                # docker api timeout
+#timeout = 60                               # docker api timeout
 
 
 #
@@ -51,7 +51,7 @@
                                             #
                                             # This option is required to monitor cluster metrics.
                                             #
-#timeout = 10                               # timeout to send metrics
+#timeout = 60                               # timeout to send metrics
 
 
 #
