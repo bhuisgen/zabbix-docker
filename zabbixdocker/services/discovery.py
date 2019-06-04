@@ -280,7 +280,7 @@ class DockerDiscoveryWorker(threading.Thread):
                                 })
 
             if self._config.getboolean("main", "containers_top"):
-                container_top = self._docker_client.top(container)
+                container_top: dict = dict(self._docker_client.top(container))
                 if (
                     "Processes" in container_top and
                     isinstance(container_top["Processes"], int)
