@@ -229,11 +229,10 @@ class DockerDiscoveryWorker(threading.Thread):
                 if (
                     "cpu_stats" in container_stats and
                     "cpu_usage" in container_stats["cpu_stats"] and
-                    "percpu_usage" in container_stats["cpu_stats"]["cpu_usage"]
+                    "percpu_usage" in container_stats["cpu_stats"]["cpu_usage"] and
+                    isinstance(container_stats["cpu_stats"]["cpu_usage"]["percpu_usage"], int)
                 ):
-                    cpus = len(container_stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
-
-                    for i in range(cpus):
+                    for i in range(len(container_stats["cpu_stats"]["cpu_usage"]["percpu_usage"])):
                         discovery_containers_stats_cpus.append({
                             **{
                                 "{#NAME}": container_name,
@@ -252,7 +251,8 @@ class DockerDiscoveryWorker(threading.Thread):
 
                 if (
                     "blkio_stats" in container_stats and
-                    "io_serviced_recursive" in container_stats["blkio_stats"]
+                    "io_serviced_recursive" in container_stats["blkio_stats"] and
+                    isinstance(container_stats["blkio_stats"]["io_serviced_recursive"], int)
                 ):
                     for j in range(len(container_stats["blkio_stats"]["io_serviced_recursive"])):
                         if container_stats["blkio_stats"]["io_serviced_recursive"][j]["op"] != "Total":
@@ -281,7 +281,10 @@ class DockerDiscoveryWorker(threading.Thread):
 
             if self._config.getboolean("main", "containers_top"):
                 container_top = self._docker_client.top(container)
-                if "Processes" in container_top:
+                if (
+                    "Processes" in container_top and
+                    isinstance(container_top["Processes"], int)
+                ):
                     for j in range(len(container_top["Processes"])):
                         discovery_containers_top.append({
                             **{

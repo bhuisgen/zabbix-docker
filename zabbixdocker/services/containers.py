@@ -365,7 +365,8 @@ class DockerContainersStatsService(threading.Thread):
                     if (
                         "cpu_stats" in container_stats and
                         "cpu_usage" in container_stats["cpu_stats"] and
-                        "percpu_usage" in container_stats["cpu_stats"]["cpu_usage"]
+                        "percpu_usage" in container_stats["cpu_stats"]["cpu_usage"] and
+                        isinstance(container_stats["cpu_stats"]["cpu_usage"]["percpu_usage"], int)
                     ):
                         for i in range(len(container_stats["cpu_stats"]["cpu_usage"]["percpu_usage"])):
                             percpu = (container_stats["cpu_stats"]["cpu_usage"]["percpu_usage"][i] -
@@ -761,7 +762,9 @@ class DockerContainersStatsService(threading.Thread):
                     if (
                         "blkio_stats" in container_stats and
                         "io_serviced_recursive" in container_stats["blkio_stats"] and
-                        "io_service_bytes_recursive" in container_stats["blkio_stats"]
+                        "io_service_bytes_recursive" in container_stats["blkio_stats"] and
+                        isinstance(container_stats["blkio_stats"]["io_serviced_recursive"], int) and
+                        isinstance(container_stats["blkio_stats"]["io_service_bytes_recursive"], int)
                     ):
                         for i in range(len(container_stats["blkio_stats"]["io_serviced_recursive"])):
                             metrics.append(
@@ -910,6 +913,9 @@ class DockerContainersTopService(threading.Thread):
                 if container["Id"] in self._containers_top:
                     container_top = self._containers_top[container["Id"]]["data"]
                     clock = self._containers_top[container["Id"]]["clock"]
+
+                    if not isinstance(container_top["Processes"], int):
+                        continue
 
                     for i in range(len(container_top["Processes"])):
                         metrics.append(
