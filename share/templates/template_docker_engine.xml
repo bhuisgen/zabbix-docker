@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.0</version>
-    <date>2019-05-23T12:10:49Z</date>
+    <date>2019-06-18T08:26:54Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -2026,7 +2026,7 @@
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
-                            <expression>{Custom Template Docker Engine:docker.containers.health[{#NAME}].last(300)}=0</expression>
+                            <expression>{Custom Template Docker Engine:docker.containers.health[{#NAME}].max(5m)}=0</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
                             <name>Docker container {#NAME} is not healthy on {HOST.NAME}</name>
@@ -2038,11 +2038,17 @@
                             <description/>
                             <type>0</type>
                             <manual_close>0</manual_close>
-                            <dependencies/>
+                            <dependencies>
+                                <dependency>
+                                    <name>Docker container {#NAME} is not running on {HOST.NAME}</name>
+                                    <expression>{Custom Template Docker Engine:docker.containers.status[{#NAME}].max(5m)}=0</expression>
+                                    <recovery_expression/>
+                                </dependency>
+                            </dependencies>
                             <tags/>
                         </trigger_prototype>
                         <trigger_prototype>
-                            <expression>{Custom Template Docker Engine:docker.containers.status[{#NAME}].last(300)}=0</expression>
+                            <expression>{Custom Template Docker Engine:docker.containers.status[{#NAME}].max(5m)}=0</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
                             <name>Docker container {#NAME} is not running on {HOST.NAME}</name>
@@ -3926,7 +3932,7 @@
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
-                            <expression>{Custom Template Docker Engine:docker.containers.stats.cpu_throttled_time[{#NAME}].sum(300)}&gt;0</expression>
+                            <expression>{Custom Template Docker Engine:docker.containers.stats.cpu_throttled_time[{#NAME}].min(5m)}&gt;0</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
                             <name>Docker container {#NAME} CPU throttled on {HOST.NAME}</name>
@@ -3942,7 +3948,7 @@
                             <tags/>
                         </trigger_prototype>
                         <trigger_prototype>
-                            <expression>{Custom Template Docker Engine:docker.containers.stats.cpu[{#NAME}].avg(300)}&gt;{$DOCKER.CONTAINER_CPUUSAGE_TRESHOLD}</expression>
+                            <expression>{Custom Template Docker Engine:docker.containers.stats.cpu[{#NAME}].avg(5m)}&gt;{$DOCKER.CONTAINER_CPUUSAGE_TRESHOLD}</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
                             <name>Docker container {#NAME} CPU usage is too high on {HOST.NAME}</name>
@@ -3958,7 +3964,7 @@
                             <tags/>
                         </trigger_prototype>
                         <trigger_prototype>
-                            <expression>{Custom Template Docker Engine:docker.containers.stats.memory[{#NAME}].avg(300)}&gt;{$DOCKER.CONTAINER_MEMUSAGE_TRESHOLD}</expression>
+                            <expression>{Custom Template Docker Engine:docker.containers.stats.memory[{#NAME}].avg(5m)}&gt;{$DOCKER.CONTAINER_MEMUSAGE_TRESHOLD}</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
                             <name>Docker container {#NAME} memory usage is too high on {HOST.NAME}</name>
@@ -6618,6 +6624,14 @@
                     <value>50</value>
                 </macro>
                 <macro>
+                    <macro>{$DOCKER.IMAGES_TRESHOLD}</macro>
+                    <value>100</value>
+                </macro>
+                <macro>
+                    <macro>{$DOCKER.NETWORKS_TRESHOLD}</macro>
+                    <value>100</value>
+                </macro>
+                <macro>
                     <macro>{$DOCKER.NETWORK_CONTAINERS_TRESHOLD}</macro>
                     <value>200</value>
                 </macro>
@@ -6629,6 +6643,10 @@
                     <macro>{$DOCKER.PROCESS_MEMUSAGE_TRESHOLD}</macro>
                     <value>50</value>
                 </macro>
+                <macro>
+                    <macro>{$DOCKER.VOLUMES_TRESHOLD}</macro>
+                    <value>100</value>
+                </macro>
             </macros>
             <templates/>
             <screens/>
@@ -6636,7 +6654,7 @@
     </templates>
     <triggers>
         <trigger>
-            <expression>{Custom Template Docker Engine:docker.containers.unhealthy.avg(5m)}&gt;0</expression>
+            <expression>{Custom Template Docker Engine:docker.containers.unhealthy.min(5m)}&lt;&gt;0</expression>
             <recovery_mode>0</recovery_mode>
             <recovery_expression/>
             <name>Docker containers are not healthy on {HOST.NAME}</name>
@@ -6652,7 +6670,7 @@
             <tags/>
         </trigger>
         <trigger>
-            <expression>{Custom Template Docker Engine:docker.containers.stopped.avg(5m)}&gt;0</expression>
+            <expression>{Custom Template Docker Engine:docker.containers.stopped.min(5m)}&lt;&gt;0</expression>
             <recovery_mode>0</recovery_mode>
             <recovery_expression/>
             <name>Docker containers are not running on {HOST.NAME}</name>
@@ -6661,6 +6679,54 @@
             <url/>
             <status>0</status>
             <priority>1</priority>
+            <description/>
+            <type>0</type>
+            <manual_close>0</manual_close>
+            <dependencies/>
+            <tags/>
+        </trigger>
+        <trigger>
+            <expression>{Custom Template Docker Engine:docker.images.total.last()}&gt;={$DOCKER.IMAGES_TRESHOLD}</expression>
+            <recovery_mode>0</recovery_mode>
+            <recovery_expression/>
+            <name>Too many docker images on {HOST.NAME}</name>
+            <correlation_mode>0</correlation_mode>
+            <correlation_tag/>
+            <url/>
+            <status>0</status>
+            <priority>2</priority>
+            <description/>
+            <type>0</type>
+            <manual_close>0</manual_close>
+            <dependencies/>
+            <tags/>
+        </trigger>
+        <trigger>
+            <expression>{Custom Template Docker Engine:docker.networks.total.last()}&gt;={$DOCKER.NETWORKS_TRESHOLD}</expression>
+            <recovery_mode>0</recovery_mode>
+            <recovery_expression/>
+            <name>Too many docker networks on {HOST.NAME}</name>
+            <correlation_mode>0</correlation_mode>
+            <correlation_tag/>
+            <url/>
+            <status>0</status>
+            <priority>2</priority>
+            <description/>
+            <type>0</type>
+            <manual_close>0</manual_close>
+            <dependencies/>
+            <tags/>
+        </trigger>
+        <trigger>
+            <expression>{Custom Template Docker Engine:docker.volumes.total.last()}&gt;={$DOCKER.VOLUMES_TRESHOLD}</expression>
+            <recovery_mode>0</recovery_mode>
+            <recovery_expression/>
+            <name>Too many docker volumes on {HOST.NAME}</name>
+            <correlation_mode>0</correlation_mode>
+            <correlation_tag/>
+            <url/>
+            <status>0</status>
+            <priority>2</priority>
             <description/>
             <type>0</type>
             <manual_close>0</manual_close>
