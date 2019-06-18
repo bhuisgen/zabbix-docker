@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.0</version>
-    <date>2019-05-23T12:11:22Z</date>
+    <date>2019-06-18T08:27:15Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -1980,7 +1980,7 @@
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
-                            <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_failed[{#NAME}].last()}&gt;0 or {Custom Template Docker Swarm:docker.swarm.services.tasks_rejected[{#NAME}].last()}&lt;&gt;0 or {Custom Template Docker Swarm:docker.swarm.services.tasks_orphaned[{#NAME}].last()}&lt;&gt;0</expression>
+                            <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_failed[{#NAME}].min(5m)}&lt;&gt;0 or {Custom Template Docker Swarm:docker.swarm.services.tasks_rejected[{#NAME}].min(5m)}&lt;&gt;0 or {Custom Template Docker Swarm:docker.swarm.services.tasks_orphaned[{#NAME}].min(5m)}&lt;&gt;0</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
                             <name>Docker swarm service {#NAME} is not healthy on {HOST.NAME}</name>
@@ -1992,7 +1992,13 @@
                             <description/>
                             <type>0</type>
                             <manual_close>0</manual_close>
-                            <dependencies/>
+                            <dependencies>
+                                <dependency>
+                                    <name>Docker swarm service {#NAME} is not running on {HOST.NAME}</name>
+                                    <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_running[{#NAME}].max(5m)}=0</expression>
+                                    <recovery_expression/>
+                                </dependency>
+                            </dependencies>
                             <tags>
                                 <tag>
                                     <tag>DOCKER_SERVICE</tag>
@@ -2005,7 +2011,7 @@
                             </tags>
                         </trigger_prototype>
                         <trigger_prototype>
-                            <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_running[{#NAME}].last()}=0</expression>
+                            <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_running[{#NAME}].max(5m)}=0</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
                             <name>Docker swarm service {#NAME} is not running on {HOST.NAME}</name>
@@ -2592,7 +2598,7 @@
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
-                            <expression>{Custom Template Docker Swarm:docker.swarm.stacks.services_unhealthy[{#NAME}].last()}&lt;&gt;0</expression>
+                            <expression>{Custom Template Docker Swarm:docker.swarm.stacks.services_unhealthy[{#NAME}].min(5m)}&lt;&gt;0</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
                             <name>Docker swarm stack {#NAME} is not healthy on {HOST.NAME}</name>
@@ -2607,7 +2613,7 @@
                             <dependencies>
                                 <dependency>
                                     <name>Docker swarm stack {#NAME} is not running on {HOST.NAME}</name>
-                                    <expression>{Custom Template Docker Swarm:docker.swarm.stacks.services_error[{#NAME}].last()}&lt;&gt;0</expression>
+                                    <expression>{Custom Template Docker Swarm:docker.swarm.stacks.services_error[{#NAME}].min(5m)}&lt;&gt;0</expression>
                                     <recovery_expression/>
                                 </dependency>
                             </dependencies>
@@ -2619,7 +2625,7 @@
                             </tags>
                         </trigger_prototype>
                         <trigger_prototype>
-                            <expression>{Custom Template Docker Swarm:docker.swarm.stacks.services_error[{#NAME}].last()}&lt;&gt;0</expression>
+                            <expression>{Custom Template Docker Swarm:docker.swarm.stacks.services_error[{#NAME}].min(5m)}&lt;&gt;0</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
                             <name>Docker swarm stack {#NAME} is not running on {HOST.NAME}</name>
@@ -2720,7 +2726,16 @@
                 </discovery_rule>
             </discovery_rules>
             <httptests/>
-            <macros/>
+            <macros>
+                <macro>
+                    <macro>{$DOCKER_SWARM.SERVICES_TRESHOLD}</macro>
+                    <value>200</value>
+                </macro>
+                <macro>
+                    <macro>{$DOCKER_SWARM.STACKS_TRESHOLD}</macro>
+                    <value>100</value>
+                </macro>
+            </macros>
             <templates/>
             <screens/>
         </template>
@@ -2752,6 +2767,38 @@
             <url/>
             <status>0</status>
             <priority>4</priority>
+            <description/>
+            <type>0</type>
+            <manual_close>0</manual_close>
+            <dependencies/>
+            <tags/>
+        </trigger>
+        <trigger>
+            <expression>{Custom Template Docker Swarm:docker.swarm.services.total.last()}&gt;={$DOCKER_SWARM.SERVICES_TRESHOLD}</expression>
+            <recovery_mode>0</recovery_mode>
+            <recovery_expression/>
+            <name>Too many docker services on {HOST.NAME}</name>
+            <correlation_mode>0</correlation_mode>
+            <correlation_tag/>
+            <url/>
+            <status>0</status>
+            <priority>1</priority>
+            <description/>
+            <type>0</type>
+            <manual_close>0</manual_close>
+            <dependencies/>
+            <tags/>
+        </trigger>
+        <trigger>
+            <expression>{Custom Template Docker Swarm:docker.swarm.stacks.total.last()}&gt;={$DOCKER_SWARM.STACKS_TRESHOLD}</expression>
+            <recovery_mode>0</recovery_mode>
+            <recovery_expression/>
+            <name>Too many docker stacks on {HOST.NAME}</name>
+            <correlation_mode>0</correlation_mode>
+            <correlation_tag/>
+            <url/>
+            <status>0</status>
+            <priority>1</priority>
             <description/>
             <type>0</type>
             <manual_close>0</manual_close>

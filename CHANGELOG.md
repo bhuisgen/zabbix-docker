@@ -1,3 +1,7 @@
+## 0.4.1 (2019-05-22)
+
+- improve exceptions catching in case of missing docker metrics
+
 ## 0.4.0 (2019-05-22)
 
 - add swarm nodes, services, stacks, configs and secrets metrics

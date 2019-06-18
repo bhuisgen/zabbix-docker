@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.0</version>
-    <date>2019-05-23T12:07:48Z</date>
+    <date>2019-06-18T08:25:54Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -2474,7 +2474,7 @@
     </templates>
     <triggers>
         <trigger>
-            <expression>{Custom Template Docker Cluster:grpsum[{$DOCKER_CLUSTER.GROUP},docker.containers.unhealthy,last,0].min(5m)}&gt;0</expression>
+            <expression>{Custom Template Docker Cluster:grpsum[{$DOCKER_CLUSTER.GROUP},docker.containers.unhealthy,last,0].min(5m)}&lt;&gt;0</expression>
             <recovery_mode>0</recovery_mode>
             <recovery_expression/>
             <name>Docker containers are not healthy on cluster {HOST.NAME}</name>
@@ -2490,7 +2490,7 @@
             <tags/>
         </trigger>
         <trigger>
-            <expression>{Custom Template Docker Cluster:grpsum[{$DOCKER_CLUSTER.GROUP},docker.containers.stopped,last,0].min(5m)}&gt;0</expression>
+            <expression>{Custom Template Docker Cluster:grpsum[{$DOCKER_CLUSTER.GROUP},docker.containers.stopped,last,0].min(5m)}&lt;&gt;0</expression>
             <recovery_mode>0</recovery_mode>
             <recovery_expression/>
             <name>Docker containers are not running on cluster {HOST.NAME}</name>
