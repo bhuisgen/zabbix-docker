@@ -195,7 +195,7 @@ class DockerEventsPollerWorker(threading.Thread):
                 if len(metrics) > 0:
                     self._logger.debug("sending %d metrics" % len(metrics))
                     self._zabbix_sender.send(metrics)
-            except (IOError, OSError, KeyError):
+            except (IOError, OSError, LookupError, ValueError):
                 self._logger.error("failed to send events metrics")
 
                 pass

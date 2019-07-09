@@ -228,7 +228,7 @@ class DockerSwarmWorker(threading.Thread):
                 if len(metrics) > 0:
                     self._logger.debug("sending %d metrics" % len(metrics))
                     self._zabbix_sender.send(metrics)
-            except (IOError, OSError, KeyError):
+            except (IOError, OSError, LookupError, ValueError):
                 self._logger.error("failed to send stacks metrics")
 
     def _check_leader(self) -> bool:
@@ -622,7 +622,7 @@ class DockerSwarmServicesWorker(threading.Thread):
                 if len(metrics) > 0:
                     self._logger.debug("sending %d metrics" % len(metrics))
                     self._zabbix_sender.send(metrics)
-            except (IOError, OSError, KeyError):
+            except (IOError, OSError, LookupError, ValueError):
                 self._logger.error("failed to send services metrics")
 
     def _check_leader(self) -> bool:
@@ -851,7 +851,7 @@ class DockerSwarmStacksWorker(threading.Thread):
                 if len(metrics) > 0:
                     self._logger.debug("sending %d metrics" % len(metrics))
                     self._zabbix_sender.send(metrics)
-            except (IOError, OSError, KeyError):
+            except (IOError, OSError, LookupError, ValueError):
                 self._logger.error("failed to send stacks metrics")
 
     def _check_leader(self) -> bool:
