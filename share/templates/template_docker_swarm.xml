@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.0</version>
-    <date>2019-06-18T08:27:15Z</date>
+    <date>2019-06-21T07:29:57Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -36,7 +36,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.configs</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -95,7 +95,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.nodes.available</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -154,7 +154,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.nodes.managers</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -213,7 +213,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.nodes.managers_reachable</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -272,7 +272,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.nodes.managers_unreachable</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -331,7 +331,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.nodes.status_down</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -390,7 +390,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.nodes.status_ready</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -449,7 +449,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.nodes.total</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -508,7 +508,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.nodes.unavailable</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -567,7 +567,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.nodes.workers</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -626,7 +626,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.secrets</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -685,7 +685,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.services.total</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -744,7 +744,7 @@
                     <snmp_oid/>
                     <key>docker.swarm.stacks.total</key>
                     <delay>0</delay>
-                    <history>90d</history>
+                    <history>7d</history>
                     <trends>365d</trends>
                     <status>0</status>
                     <value_type>3</value_type>
@@ -2362,7 +2362,7 @@
                             <snmp_oid/>
                             <key>docker.swarm.stacks.services_error[{#NAME}]</key>
                             <delay>0</delay>
-                            <history>90d</history>
+                            <history>7d</history>
                             <trends>365d</trends>
                             <status>0</status>
                             <value_type>3</value_type>
@@ -2422,7 +2422,7 @@
                             <snmp_oid/>
                             <key>docker.swarm.stacks.services_healthy[{#NAME}]</key>
                             <delay>0</delay>
-                            <history>90d</history>
+                            <history>7d</history>
                             <trends>365d</trends>
                             <status>0</status>
                             <value_type>3</value_type>
@@ -2482,7 +2482,7 @@
                             <snmp_oid/>
                             <key>docker.swarm.stacks.services_total[{#NAME}]</key>
                             <delay>0</delay>
-                            <history>90d</history>
+                            <history>7d</history>
                             <trends>365d</trends>
                             <status>0</status>
                             <value_type>3</value_type>
@@ -2542,7 +2542,7 @@
                             <snmp_oid/>
                             <key>docker.swarm.stacks.services_unhealthy[{#NAME}]</key>
                             <delay>0</delay>
-                            <history>90d</history>
+                            <history>7d</history>
                             <trends>365d</trends>
                             <status>0</status>
                             <value_type>3</value_type>
