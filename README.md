@@ -6,8 +6,9 @@ Boris HUISGEN <bhuisgen@hbis.fr>
 
 ## Introduction
 
-Zabbix-docker is an agent which monitors a docker engine, getting his metrics and sending them directly to a Zabbix 
-server or a Zabbix proxy. You can monitor a single docker engine or a swarm cluster.
+Zabbix-docker is an standalone agent which monitors a docker host engine, getting and sending his metrics to a
+zabbix server or proxy as trapper items. It can monitor swarm metrics too if the node is detected as the current swarm
+leader.
 
 ## Setup
 
@@ -28,15 +29,15 @@ For more information on these templates, read the following [documentation](doc/
 
 Some global regular expressions must be created for the discovery rules:
 
-| Name                                         | Expression type   | Expression                             | Note                              |
-|----------------------------------------------|-------------------|----------------------------------------|-----------------------------------|
-| Docker mount points for discovery            | [Result is FALSE] | ^/etc                                  | Container mountpoints to ignore   |
-| Docker network interfaces for discovery      | [Result is FALSE] | ^veth                                  | Host virtual interfaces to ignore |
-| Docker container names for discovery         | [Result is FALSE] | ^(k8|ucp-kube|ucp-pause|ucp-interlock) | Ignore useless CTs                |
-| Docker container process names for discovery | [Result is TRUE]  | .+                                     |                                   |
-| Docker network names for discovery           | [Result is TRUE]  | .+                                     |                                   |
-| Docker swarm service names for discovery     | [Result is FALSE] | ^(ucp-.+-win\|ucp-.+-s390x)$           | Ignore useless services           |
-| Docker swarm stack names for discovery       | [Result is TRUE]  | .+                                     |                                   |
+| Name                                         | Expression type   | Expression                                | Note                              |
+|----------------------------------------------|-------------------|-------------------------------------------|-----------------------------------|
+| Docker mount points for discovery            | [Result is FALSE] | ^/etc                                     | Container mountpoints to ignore   |
+| Docker network interfaces for discovery      | [Result is FALSE] | ^veth                                     | Host virtual interfaces to ignore |
+| Docker container names for discovery         | [Result is FALSE] | ^(k8\|ucp-kube\|ucp-pause\|ucp-interlock) | Ignore useless CTs                |
+| Docker container process names for discovery | [Result is TRUE]  | .+                                        |                                   |
+| Docker network names for discovery           | [Result is TRUE]  | .+                                        |                                   |
+| Docker swarm service names for discovery     | [Result is FALSE] | ^(ucp-.+-win\|ucp-.+-s390x)$              | Ignore useless services           |
+| Docker swarm stack names for discovery       | [Result is TRUE]  | .+                                        |                                   |
 
 ## Usage
 
