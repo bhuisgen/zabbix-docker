@@ -1,3 +1,7 @@
+## 0.4.2 (2019-07-09)
+
+- improve exceptions catching in case of decoding errors
+
 ## 0.4.1 (2019-05-22)
 
 - improve exceptions catching in case of missing docker metrics
