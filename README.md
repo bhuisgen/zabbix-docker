@@ -6,8 +6,9 @@ Boris HUISGEN <bhuisgen@hbis.fr>
 
 ## Introduction
 
-Zabbix-docker is an agent which monitors a docker engine, getting his metrics and sending them directly to a Zabbix 
-server or a Zabbix proxy. You can monitor a single docker engine or a swarm cluster.
+Zabbix-docker is an standalone agent which monitors a docker host engine, getting and sending his metrics to a
+zabbix server or proxy as trapper items. It can monitor swarm metrics too if the node is detected as the current swarm
+leader.
 
 ## Setup
 
