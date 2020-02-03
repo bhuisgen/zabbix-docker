@@ -9,11 +9,9 @@ import sys
 import threading
 
 import docker
-import pyzabbix
 import xdg
 
-from zabbixdocker.version import __version__
-
+from zabbixdocker.lib.zabbix import ZabbixSender
 from zabbixdocker.services.containers import DockerContainersService, DockerContainersStatsService,\
     DockerContainersRemoteService, DockerContainersTopService
 from zabbixdocker.services.discovery import DockerDiscoveryService
@@ -22,6 +20,7 @@ from zabbixdocker.services.images import DockerImagesService
 from zabbixdocker.services.networks import DockerNetworksService
 from zabbixdocker.services.swarm import DockerSwarmService, DockerSwarmServicesService, DockerSwarmStacksService
 from zabbixdocker.services.volumes import DockerVolumesService
+from zabbixdocker.version import __version__
 
 
 class Application(object):
@@ -97,7 +96,7 @@ class Application(object):
         swarm_stacks_labels =
         poll_events = yes
         poll_events_interval = 60
-        
+
         [containers]
         startup = 30
         interval = 60
@@ -133,7 +132,7 @@ class Application(object):
         [networks]
         startup = 30
         interval = 60
-        
+
         [volumes]
         startup = 30
         interval = 60
@@ -141,11 +140,11 @@ class Application(object):
         [swarm]
         startup = 30
         interval = 60
-        
+
         [swarm_services]
         startup = 30
         interval = 60
-        
+
         [swarm_stacks]
         startup = 30
         interval = 60
@@ -153,7 +152,7 @@ class Application(object):
 
         self._config = configparser.ConfigParser()
         self._config.read_string(config_default)
-        
+
         if "file" in args and args.file:
             self._config.read(args.file)
         else:
@@ -219,11 +218,11 @@ class Application(object):
                 server = serverport[0]
                 port = int(serverport[1])
 
-            zabbix_sender = pyzabbix.ZabbixSender(zabbix_server=server, zabbix_port=port,
-                                                  timeout=self._config.getint("zabbix", "timeout"))
+            zabbix_sender = ZabbixSender(zabbix_server=server, zabbix_port=port,
+                                         timeout=self._config.getint("zabbix", "timeout"))
         else:
-            zabbix_sender = pyzabbix.ZabbixSender(use_config=True,
-                                                  timeout=self._config.getint("zabbix", "timeout"))
+            zabbix_sender = ZabbixSender(use_config="1",
+                                         timeout=self._config.getint("zabbix", "timeout"))
 
         if not self._config.has_option("zabbix", "hostname"):
             self._config.set("zabbix", "hostname", socket.gethostname())

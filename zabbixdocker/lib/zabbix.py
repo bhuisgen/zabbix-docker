@@ -30,6 +30,19 @@ import re
 from io import StringIO
 
 
+class NullHandler(logging.Handler):
+    """Null logger handler.
+    :class:`NullHandler` will be used if there are no other logger handlers.
+    """
+
+    def emit(self, record):
+        pass
+
+
+logger = logging.getLogger(__name__)
+logger.addHandler(NullHandler())
+
+
 class ZabbixResponse(object):
     """The :class:`ZabbixResponse` contains the parsed response from Zabbix."""
 
@@ -101,7 +114,6 @@ class ZabbixMetric(object):
     """
 
     def __init__(self, host, key, value, clock=None):
-        self._logger = logging.getLogger(self.__class__.__name__)
         self.host = str(host)
         self.key = str(key)
         self.value = str(value)
@@ -115,7 +127,7 @@ class ZabbixMetric(object):
         """Represent detailed ZabbixMetric view."""
 
         result = json.dumps(self.__dict__, ensure_ascii=False)
-        self._logger.debug('%s: %s', self.__class__.__name__, result)
+        logger.debug('%s: %s', self.__class__.__name__, result)
 
         return result
 
@@ -166,7 +178,6 @@ class ZabbixSender(object):
                  socket_wrapper=None,
                  timeout=10):
 
-        self._logger = logging.getLogger(self.__class__.__name__)
         self.chunk_size = chunk_size
         self.timeout = timeout
 
@@ -180,7 +191,7 @@ class ZabbixSender(object):
         """Represent detailed ZabbixSender view."""
 
         result = json.dumps(self.__dict__, ensure_ascii=False)
-        self._logger.debug('%s: %s', self.__class__.__name__, result)
+        logger.debug('%s: %s', self.__class__.__name__, result)
 
         return result
 
@@ -200,7 +211,7 @@ class ZabbixSender(object):
         if config_file and isinstance(config_file, bool):
             config_file = '/etc/zabbix/zabbix_agentd.conf'
 
-        self._logger.debug("Used config: %s", config_file)
+        logger.debug("Used config: %s", config_file)
 
         #  This is workaround for config wile without sections
         with open(config_file, 'r') as f:
@@ -231,7 +242,7 @@ class ZabbixSender(object):
             server, port = serverport.split(':')
             serverport = (server, int(port))
             result.append(serverport)
-        self._logger.debug("Loaded params: %s", result)
+        logger.debug("Loaded params: %s", result)
 
         return result
 
@@ -271,7 +282,7 @@ class ZabbixSender(object):
         for m in metrics:
             messages.append(str(m))
 
-        self._logger.debug('Messages: %s', messages)
+        logger.debug('Messages: %s', messages)
 
         return messages
 
@@ -288,7 +299,7 @@ class ZabbixSender(object):
         msg = ','.join(messages)
         request = '{{"request":"sender data","data":[{msg}]}}'.format(msg=msg)
         request = request.encode("utf-8")
-        self._logger.debug('Request: %s', request)
+        logger.debug('Request: %s', request)
 
         return request
 
@@ -311,8 +322,8 @@ class ZabbixSender(object):
             else:
                 return x
 
-        self._logger.debug('Packet [str]: %s', packet)
-        self._logger.debug('Packet [hex]: %s', ':'.join(hex(ord23(x))[2:] for x in packet))
+        logger.debug('Packet [str]: %s', packet)
+        logger.debug('Packet [hex]: %s', ':'.join(hex(ord23(x))[2:] for x in packet))
         return packet
 
     def _get_response(self, connection):
@@ -326,16 +337,16 @@ class ZabbixSender(object):
         """
 
         response_header = self._receive(connection, 13)
-        self._logger.debug('Response header: %s', response_header)
+        logger.debug('Response header: %s', response_header)
 
         if (not response_header.startswith(b'ZBXD\x01')) or (len(response_header) != 13):
-            self._logger.debug('Zabbix return not valid response.')
+            logger.debug('Zabbix return not valid response.')
             result = False
         else:
             response_len = struct.unpack('<Q', response_header[5:])[0]
             response_body = connection.recv(response_len)
             result = json.loads(response_body.decode("utf-8"))
-            self._logger.debug('Data received: %s', result)
+            logger.debug('Data received: %s', result)
 
         try:
             connection.close()
@@ -359,7 +370,7 @@ class ZabbixSender(object):
         packet = self._create_packet(request)
 
         for host_addr in self.zabbix_uri:
-            self._logger.debug('Sending data to %s', host_addr)
+            logger.debug('Sending data to %s', host_addr)
 
             # create socket object
             connection_ = socket.socket()
@@ -375,22 +386,22 @@ class ZabbixSender(object):
                 connection.connect(host_addr)
                 connection.sendall(packet)
             except socket.timeout:
-                self._logger.error('Sending failed: Connection to %s timed out after %d seconds', host_addr,
+                logger.error('Sending failed: Connection to %s timed out after %d seconds', host_addr,
                                    self.timeout)
                 connection.close()
                 raise socket.timeout
             except socket.error as err:
                 # In case of error we should close connection, otherwise
                 # we will close it after data will be received.
-                self._logger.warning('Sending failed: %s', getattr(err, 'msg', str(err)))
+                logger.warning('Sending failed: %s', getattr(err, 'msg', str(err)))
                 connection.close()
                 raise err
 
             response = self._get_response(connection)
-            self._logger.debug('%s response: %s', host_addr, response)
+            logger.debug('%s response: %s', host_addr, response)
 
             if response and response.get('response') != 'success':
-                self._logger.debug('Response error: %s}', response)
+                logger.debug('Response error: %s}', response)
                 raise socket.error(response)
 
         return response

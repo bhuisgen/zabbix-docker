@@ -7,7 +7,7 @@ import threading
 
 import docker
 
-from pyzabbix import ZabbixMetric, ZabbixSender
+from zabbixdocker.lib.zabbix import ZabbixMetric, ZabbixSender
 
 
 class DockerVolumesService(threading.Thread):

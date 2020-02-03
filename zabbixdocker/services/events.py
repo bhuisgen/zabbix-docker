@@ -9,9 +9,8 @@ import time
 
 import docker
 
-from pyzabbix import ZabbixMetric, ZabbixSender
-
 from zabbixdocker.services.discovery import DockerDiscoveryService
+from zabbixdocker.lib.zabbix import ZabbixMetric, ZabbixSender
 
 
 class DockerEventsService(threading.Thread):

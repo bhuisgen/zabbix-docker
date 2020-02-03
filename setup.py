@@ -26,5 +26,5 @@ setuptools.setup(
     url="https://github.com/bhuisgen/zabbix-docker",
     download_url="https://github.com/bhuisgen/zabbix-docker",
     packages=setuptools.find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    install_requires=["docker", "py-zabbix", "xdg"]
+    install_requires=["docker", "xdg"]
 )
