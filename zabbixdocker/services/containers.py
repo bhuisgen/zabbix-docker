@@ -105,6 +105,7 @@ class DockerContainersWorker(threading.Thread):
 
                 containers_total = len(containers)
                 containers_running = 0
+                containers_created = 0
                 containers_stopped = 0
                 containers_healthy = 0
                 containers_unhealthy = 0
@@ -143,6 +144,16 @@ class DockerContainersWorker(threading.Thread):
                                     "%d" % 0
                                 )
                             )
+                    elif container["Status"] == "Created":
+                        containers_created += 1
+
+                        metrics.append(
+                            ZabbixMetric(
+                                self._config.get("zabbix", "hostname"),
+                                "docker.containers.status[%s]" % container_name,
+                                "%d" % 0
+                            )
+                        )
                     else:
                         containers_stopped += 1
 
@@ -166,6 +177,13 @@ class DockerContainersWorker(threading.Thread):
                         self._config.get("zabbix", "hostname"),
                         "docker.containers.running",
                         "%d" % containers_running
+                    )
+                )
+                metrics.append(
+                    ZabbixMetric(
+                        self._config.get("zabbix", "hostname"),
+                        "docker.containers.created",
+                        "%d" % containers_created
                     )
                 )
                 metrics.append(

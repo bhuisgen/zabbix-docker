@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
-    <version>4.0</version>
-    <date>2019-07-12T07:18:19Z</date>
+    <version>4.2</version>
+    <date>2019-12-19T09:14:35Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -30,7 +30,66 @@
             </applications>
             <items>
                 <item>
-                    <name>Number of healthy containers</name>
+                    <name>Number of containers with status created</name>
+                    <type>2</type>
+                    <snmp_community/>
+                    <snmp_oid/>
+                    <key>docker.containers.created</key>
+                    <delay>0</delay>
+                    <history>7d</history>
+                    <trends>365d</trends>
+                    <status>0</status>
+                    <value_type>3</value_type>
+                    <allowed_hosts/>
+                    <units/>
+                    <snmpv3_contextname/>
+                    <snmpv3_securityname/>
+                    <snmpv3_securitylevel>0</snmpv3_securitylevel>
+                    <snmpv3_authprotocol>0</snmpv3_authprotocol>
+                    <snmpv3_authpassphrase/>
+                    <snmpv3_privprotocol>0</snmpv3_privprotocol>
+                    <snmpv3_privpassphrase/>
+                    <params/>
+                    <ipmi_sensor/>
+                    <authtype>0</authtype>
+                    <username/>
+                    <password/>
+                    <publickey/>
+                    <privatekey/>
+                    <port/>
+                    <description/>
+                    <inventory_link>0</inventory_link>
+                    <applications>
+                        <application>
+                            <name>Docker</name>
+                        </application>
+                    </applications>
+                    <valuemap/>
+                    <logtimefmt/>
+                    <preprocessing/>
+                    <jmx_endpoint/>
+                    <timeout>3s</timeout>
+                    <url/>
+                    <query_fields/>
+                    <posts/>
+                    <status_codes>200</status_codes>
+                    <follow_redirects>1</follow_redirects>
+                    <post_type>0</post_type>
+                    <http_proxy/>
+                    <headers/>
+                    <retrieve_mode>0</retrieve_mode>
+                    <request_method>0</request_method>
+                    <output_format>0</output_format>
+                    <allow_traps>0</allow_traps>
+                    <ssl_cert_file/>
+                    <ssl_key_file/>
+                    <ssl_key_password/>
+                    <verify_peer>0</verify_peer>
+                    <verify_host>0</verify_host>
+                    <master_item/>
+                </item>
+                <item>
+                    <name>Number of containers with status healthy</name>
                     <type>2</type>
                     <snmp_community/>
                     <snmp_oid/>
@@ -89,7 +148,7 @@
                     <master_item/>
                 </item>
                 <item>
-                    <name>Number of running containers</name>
+                    <name>Number of containers with status running</name>
                     <type>2</type>
                     <snmp_community/>
                     <snmp_oid/>
@@ -1092,7 +1151,7 @@
                     <master_item/>
                 </item>
                 <item>
-                    <name>Number of stopped containers</name>
+                    <name>Number of containers with status stopped</name>
                     <type>2</type>
                     <snmp_community/>
                     <snmp_oid/>
@@ -1210,7 +1269,7 @@
                     <master_item/>
                 </item>
                 <item>
-                    <name>Number of unhealthy containers</name>
+                    <name>Number of containers with status unhealthy</name>
                     <type>2</type>
                     <snmp_community/>
                     <snmp_oid/>
@@ -2084,6 +2143,9 @@
                     <ssl_key_password/>
                     <verify_peer>0</verify_peer>
                     <verify_host>0</verify_host>
+                    <lld_macro_paths/>
+                    <preprocessing/>
+                    <master_item/>
                 </discovery_rule>
                 <discovery_rule>
                     <name>Containers statistics discovery</name>
@@ -2405,6 +2467,8 @@
                                 <step>
                                     <type>1</type>
                                     <params>1e+6</params>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -4189,6 +4253,9 @@
                     <ssl_key_password/>
                     <verify_peer>0</verify_peer>
                     <verify_host>0</verify_host>
+                    <lld_macro_paths/>
+                    <preprocessing/>
+                    <master_item/>
                 </discovery_rule>
                 <discovery_rule>
                     <name>Containers CPU statistics discovery</name>
@@ -4344,6 +4411,9 @@
                     <ssl_key_password/>
                     <verify_peer>0</verify_peer>
                     <verify_host>0</verify_host>
+                    <lld_macro_paths/>
+                    <preprocessing/>
+                    <master_item/>
                 </discovery_rule>
                 <discovery_rule>
                     <name>Containers devices statistics discovery</name>
@@ -4425,6 +4495,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -4490,6 +4562,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -4555,6 +4629,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -4620,6 +4696,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -4685,6 +4763,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -4750,6 +4830,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -4815,6 +4897,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -4880,6 +4964,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -4945,6 +5031,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -5128,6 +5216,9 @@
                     <ssl_key_password/>
                     <verify_peer>0</verify_peer>
                     <verify_host>0</verify_host>
+                    <lld_macro_paths/>
+                    <preprocessing/>
+                    <master_item/>
                 </discovery_rule>
                 <discovery_rule>
                     <name>Containers networks statistics discovery</name>
@@ -5209,6 +5300,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -5274,6 +5367,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -5339,6 +5434,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -5404,6 +5501,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -5469,6 +5568,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -5534,6 +5635,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -5599,6 +5702,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -5664,6 +5769,8 @@
                                 <step>
                                     <type>10</type>
                                     <params/>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -5887,6 +5994,9 @@
                     <ssl_key_password/>
                     <verify_peer>0</verify_peer>
                     <verify_host>0</verify_host>
+                    <lld_macro_paths/>
+                    <preprocessing/>
+                    <master_item/>
                 </discovery_rule>
                 <discovery_rule>
                     <name>Containers processes discovery</name>
@@ -6094,6 +6204,8 @@
                                 <step>
                                     <type>1</type>
                                     <params>1024</params>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -6159,6 +6271,8 @@
                                 <step>
                                     <type>1</type>
                                     <params>1024</params>
+                                    <error_handler>0</error_handler>
+                                    <error_handler_params/>
                                 </step>
                             </preprocessing>
                             <jmx_endpoint/>
@@ -6347,6 +6461,9 @@
                     <ssl_key_password/>
                     <verify_peer>0</verify_peer>
                     <verify_host>0</verify_host>
+                    <lld_macro_paths/>
+                    <preprocessing/>
+                    <master_item/>
                 </discovery_rule>
                 <discovery_rule>
                     <name>Networks discovery</name>
@@ -6611,10 +6728,17 @@
                     <ssl_key_password/>
                     <verify_peer>0</verify_peer>
                     <verify_host>0</verify_host>
+                    <lld_macro_paths/>
+                    <preprocessing/>
+                    <master_item/>
                 </discovery_rule>
             </discovery_rules>
             <httptests/>
             <macros>
+                <macro>
+                    <macro>{$DOCKER.CONTAINERS_CREATED_TRESHOLD}</macro>
+                    <value>50</value>
+                </macro>
                 <macro>
                     <macro>{$DOCKER.CONTAINER_CPUUSAGE_TRESHOLD}</macro>
                     <value>30</value>
@@ -6650,6 +6774,7 @@
             </macros>
             <templates/>
             <screens/>
+            <tags/>
         </template>
     </templates>
     <triggers>
@@ -6679,6 +6804,22 @@
             <url/>
             <status>0</status>
             <priority>1</priority>
+            <description/>
+            <type>0</type>
+            <manual_close>0</manual_close>
+            <dependencies/>
+            <tags/>
+        </trigger>
+        <trigger>
+            <expression>{Custom Template Docker Engine:docker.containers.created.last()}&gt;={$DOCKER.CONTAINERS_CREATED_TRESHOLD}</expression>
+            <recovery_mode>0</recovery_mode>
+            <recovery_expression/>
+            <name>Too many docker containers created on {HOST.NAME}</name>
+            <correlation_mode>0</correlation_mode>
+            <correlation_tag/>
+            <url/>
+            <status>0</status>
+            <priority>2</priority>
             <description/>
             <type>0</type>
             <manual_close>0</manual_close>
