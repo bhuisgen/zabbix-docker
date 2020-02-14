@@ -109,3 +109,4 @@ venv.bak/
 
 # custom
 !zabbixdocker/lib
+!tests/zabbixdocker/lib
