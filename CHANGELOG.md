@@ -1,3 +1,7 @@
+## 0.4.3 (2020-02-14)
+
+- use own zabbix sender to handle correctly network errors
+
 ## 0.4.2 (2019-07-09)
 
 - improve exceptions catching in case of decoding errors
@@ -10,7 +14,7 @@
 
 - add swarm nodes, services, stacks, configs and secrets metrics
 - add docker images, networks and volumes metrics
-- add options to filter resources discoveries and to send custom labels as user macros  
+- add options to filter resources discoveries and to send custom labels as user macros
 - add option for zabbix send timeout
 - use docker SDK 3.7.2
 
