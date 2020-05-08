@@ -386,8 +386,7 @@ class ZabbixSender(object):
                 connection.connect(host_addr)
                 connection.sendall(packet)
             except socket.timeout:
-                logger.error('Sending failed: Connection to %s timed out after %d seconds', host_addr,
-                                   self.timeout)
+                logger.error('Sending failed: Connection to %s timed out after %d seconds', host_addr, self.timeout)
                 connection.close()
                 raise socket.timeout
             except socket.error as err:

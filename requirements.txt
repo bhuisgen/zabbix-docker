@@ -1,4 +1,2 @@
 docker==4.2.0
-pytest==5.4.2
-pytest-cov==2.8.1
 xdg==4.0.1

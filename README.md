@@ -6,9 +6,9 @@ Boris HUISGEN <bhuisgen@hbis.fr>
 
 ## Introduction
 
-Zabbix-docker is an standalone agent which monitors a docker host engine, getting and sending his metrics to a
-zabbix server or proxy as trapper items. It can monitor swarm metrics too if the node is detected as the current swarm
-leader.
+Zabbix-docker is an standalone agent to monitor a docker host engine, getting and sending his metrics to a
+zabbix server or proxy as trapper items. It can retrieve your cluster metrics too if the node is detected as the
+current swarm leader.
 
 ## Setup
 
@@ -25,7 +25,7 @@ Add the required templates on your Zabbix server from the *docs/zabbix/templates
 - *template_docker_manager.xml*
 - *template_docker_cluster.xml*
 
-For more information on these templates, read the following [documentation](doc/TEMPLATES.md) 
+For more information on these templates, read the following [documentation](doc/TEMPLATES.md)
 
 Some global regular expressions must be created for the discovery rules:
 
@@ -49,6 +49,6 @@ Create the configuration file and configure it:
 
 For more information on the configuration settings, read the following [documentation](doc/CONFIG.md)
 
-You can now run the agent:
+Everything is ready to run the agent:
 
     # ./bin/zabbix-docker

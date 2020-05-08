@@ -1,3 +1,7 @@
+## 0.4.4 (2020-05-08)
+
+- update docker SDK 4.2.0
+
 ## 0.4.3 (2020-02-14)
 
 - use own zabbix sender to handle correctly network errors
