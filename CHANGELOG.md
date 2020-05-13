@@ -1,3 +1,7 @@
+## CURRENT
+
+- add docker image
+
 ## 0.4.4 (2020-05-08)
 
 - update docker SDK 4.2.0
