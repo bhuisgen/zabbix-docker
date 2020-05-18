@@ -223,7 +223,7 @@ class Application(object):
             zabbix_sender = ZabbixSender(zabbix_server=server, zabbix_port=port,
                                          timeout=self._config.getint("zabbix", "timeout"))
         else:
-            zabbix_sender = ZabbixSender(use_config="1",
+            zabbix_sender = ZabbixSender(use_config=True,
                                          timeout=self._config.getint("zabbix", "timeout"))
 
         if not self._config.has_option("zabbix", "hostname"):
