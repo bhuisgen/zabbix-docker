@@ -67,6 +67,9 @@ class ZabbixResponse(object):
 
     def parse(self, response):
         """Parse zabbix response."""
+        if 'info' not in response:
+            return
+
         info = response.get('info')
         res = self._regex.search(info)
 
