@@ -369,6 +369,8 @@ class ZabbixSender(object):
         request = self._create_request(messages)
         packet = self._create_packet(request)
 
+        response = None
+
         for host_addr in self.zabbix_uri:
             logger.debug('Sending data to %s', host_addr)
 
@@ -388,20 +390,31 @@ class ZabbixSender(object):
             except socket.timeout:
                 logger.error('Sending failed: Connection to %s timed out after %d seconds', host_addr, self.timeout)
                 connection.close()
-                raise socket.timeout
+                continue
             except socket.error as err:
                 # In case of error we should close connection, otherwise
                 # we will close it after data will be received.
                 logger.warning('Sending failed: %s', getattr(err, 'msg', str(err)))
                 connection.close()
-                raise err
+                continue
 
-            response = self._get_response(connection)
-            logger.debug('%s response: %s', host_addr, response)
+            try:
+                response = self._get_response(connection)
 
-            if response and response.get('response') != 'success':
-                logger.debug('Response error: %s}', response)
+                logger.debug('%s response: %s', host_addr, response)
+            except socket.error as err:
+                logger.error('Sending failed: %s', getattr(err, 'msg', str(err)))
                 raise socket.error(response)
+
+            break
+
+        if response is None:
+            logger.error('Sending failed: no servers available')
+            raise socket.error()
+
+        if response and ("response" not in response or response.get('response') != 'success'):
+            logger.debug('Response error: %s}', response)
+            raise socket.error(response)
 
         return response
 
