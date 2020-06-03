@@ -5,6 +5,7 @@ import configparser
 import logging
 import signal
 import socket
+import ssl
 import sys
 import threading
 
@@ -82,6 +83,8 @@ class Application(object):
 
         [docker]
         base_url = unix:///var/run/docker.sock
+        tls = no
+        version = auto
         timeout = 60
 
         [zabbix]
@@ -170,6 +173,11 @@ class Application(object):
         if "hostname" in args and args.hostname:
             self._config.set("zabbix", "hostname", args.hostname)
 
+        if self._config.getboolean("docker", "tls") is True:
+            for option in ["tls_ca", "tls_cert", "tls_key"]:
+                if self._config.has_option("docker", option) is False:
+                    raise ValueError(f"Missing configuration value for option '{option}' in section 'docker'")
+
         if (
             self._config.getboolean("main", "swarm") is True and
             self._config.has_option("zabbix", "hostname_cluster") is False
@@ -206,6 +214,14 @@ class Application(object):
         self._logger.debug("creating docker client")
         docker_client = docker.APIClient(
             base_url=self._config.get("docker", "base_url"),
+            version=self._config.get("docker", "version"),
+            tls=docker.TLSConfig(
+                ca_cert=self._config.get("docker", "tls_ca"),
+                client_cert=(self._config.get("docker", "tls_cert"), self._config.get("docker", "tls_key")),
+                ssl_version=ssl.PROTOCOL_TLS,
+                verify=True,
+                assert_hostname=False
+            ) if self._config.getboolean("docker", "tls") is True else False,
             timeout=self._config.getint("docker", "timeout")
         )
 
