@@ -284,10 +284,11 @@ class Application(object):
                                                                 zabbix_sender)
                 swarm_stacks_service.start()
 
-        while not self._stop_event.isSet():
-            self._logger.debug("waiting signal")
-            signal.pause()
-            self._logger.debug("signal received")
+        self._logger.debug("waiting signal")
+
+        self._stop_event.wait()
+
+        self._logger.debug("signal received")
 
         self._logger.info("stopping application")
 
