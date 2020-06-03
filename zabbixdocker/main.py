@@ -150,7 +150,7 @@ class Application(object):
         interval = 60
         """
 
-        self._config = configparser.ConfigParser()
+        self._config = configparser.ConfigParser(inline_comment_prefixes="#")
         self._config.read_string(config_default)
 
         if "file" in args and args.file:
