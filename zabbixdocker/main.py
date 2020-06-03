@@ -12,7 +12,7 @@ import docker
 import xdg
 
 from zabbixdocker.lib.zabbix import ZabbixSender
-from zabbixdocker.services.containers import DockerContainersService, DockerContainersStatsService,\
+from zabbixdocker.services.containers import DockerContainersService, DockerContainersStatsService, \
     DockerContainersRemoteService, DockerContainersTopService
 from zabbixdocker.services.discovery import DockerDiscoveryService
 from zabbixdocker.services.events import DockerEventsService
@@ -52,13 +52,13 @@ class Application(object):
         """Start the application """
 
         parser = argparse.ArgumentParser(prog="zabbix-docker",
-                                         description="Discover and send Docker metrics to a Zabbix server.")
-        parser.add_argument("--file", help="configuration file to use", metavar="<FILE>")
+                                         description="Zabbix standalone agent to monitor Docker hosts.")
+        parser.add_argument("-f", "--file", help="configuration file to use", metavar="<FILE>")
+        parser.add_argument("--hostname", help="hostname to use for sending zabbix metrics", metavar="<HOST>")
         parser.add_argument("--rootfs", help="rootfs path to use for system metrics", metavar="<PATH>")
         parser.add_argument("--server", help="Zabbix server to send metrics", metavar="<HOST>")
-        parser.add_argument("--hostname", help="Zabbix hostname of sended metrics", metavar="<HOST>")
         parser.add_argument("--verbose", action="store_true", help="enable verbose output")
-        parser.add_argument("-v", "--version", action="version", version="zabbix-docker %s" % __version__)
+        parser.add_argument("--version", action="version", version="zabbix-docker %s" % __version__)
         args = parser.parse_args()
 
         config_default = """\
@@ -174,7 +174,9 @@ class Application(object):
             self._config.getboolean("main", "swarm") is True and
             self._config.has_option("zabbix", "hostname_cluster") is False
         ):
-            raise ValueError("Missing configuration value for option 'hostname_cluster' in section 'zabbix'")
+            print("Missing configuration value for option 'hostname_cluster' in section 'zabbix'", file=sys.stderr)
+
+            sys.exit(1)
 
         if self._config.getboolean("main", "log"):
             if self._config.get("main", "log_level") == "error":
@@ -221,7 +223,7 @@ class Application(object):
             zabbix_sender = ZabbixSender(zabbix_server=server, zabbix_port=port,
                                          timeout=self._config.getint("zabbix", "timeout"))
         else:
-            zabbix_sender = ZabbixSender(use_config="1",
+            zabbix_sender = ZabbixSender(use_config=True,
                                          timeout=self._config.getint("zabbix", "timeout"))
 
         if not self._config.has_option("zabbix", "hostname"):

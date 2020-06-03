@@ -6,42 +6,27 @@ Boris HUISGEN <bhuisgen@hbis.fr>
 
 ## Introduction
 
-Zabbix-docker is an standalone agent to monitor a docker host engine, getting and sending his metrics to a
-zabbix server or proxy as trapper items. It can retrieve your cluster metrics too if the node is detected as the
-current swarm leader.
+Zabbix-docker is a standalone Zabbix agent to run on hosts to send Docker metrics to a Zabbix server or proxy. It
+can send the metrics of Swarm clusters depending on the current leader node. All required Zabbix templates are provided
+to simplify your Zabbix setup and to monitor quickly your Docker hosts.
 
-## Setup
+Supports Docker Community Edition, Docker Entreprise Edition and Docker Universal Control Plane (UCP).
+
+# Setup
 
 Install the required python dependencies:
 
-    # python setup.py install
+    $ python3 setup.py install
 
-## Configuration
+# Configuration
 
-Add the required templates on your Zabbix server from the *docs/zabbix/templates* directory:
+## Zabbix server
 
-- *template_docker_host.xml*
-- *template_docker_engine.xml*
-- *template_docker_manager.xml*
-- *template_docker_cluster.xml*
+Import the Zabbix templates provided in the directory *docs/zabbix/templates* and enable required discovery rules.
 
-For more information on these templates, read the following [documentation](doc/TEMPLATES.md)
+## Zabbix host
 
-Some global regular expressions must be created for the discovery rules:
-
-| Name                                         | Expression type   | Expression                                | Note                              |
-|----------------------------------------------|-------------------|-------------------------------------------|-----------------------------------|
-| Docker mount points for discovery            | [Result is FALSE] | ^/etc                                     | Container mountpoints to ignore   |
-| Docker network interfaces for discovery      | [Result is FALSE] | ^veth                                     | Host virtual interfaces to ignore |
-| Docker container names for discovery         | [Result is FALSE] | ^(k8\|ucp-kube\|ucp-pause\|ucp-interlock) | Ignore useless CTs                |
-| Docker container process names for discovery | [Result is TRUE]  | .+                                        |                                   |
-| Docker network names for discovery           | [Result is TRUE]  | .+                                        |                                   |
-| Docker swarm service names for discovery     | [Result is FALSE] | ^(ucp-.+-win\|ucp-.+-s390x)$              | Ignore useless services           |
-| Docker swarm stack names for discovery       | [Result is TRUE]  | .+                                        |                                   |
-
-## Usage
-
-Create the configuration file and configure it:
+Create the configuration file and configure it to set your zabbix hostname and the server settings:
 
     # mkdir -p /etc/zabbix-docker
     # cp share/config/zabbix-docker.conf.dist /etc/zabbix-docker/zabbix-docker.conf
@@ -52,3 +37,36 @@ For more information on the configuration settings, read the following [document
 Everything is ready to run the agent:
 
     # ./bin/zabbix-docker
+
+# Docker setup
+
+The docker image can be used on any docker engine.
+
+### Standalone Engine
+
+Pull the docker image:
+
+    $ docker pull bhuisgen/zabbix-docker:0.4.4
+
+Create and run the container:
+
+    $ docker run -it --name zabbix-docker \
+        -v /etc/zabbix-docker.conf:/etc/zabbix-docker.conf \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        bhuisgen/zabbix-docker:0.4.4
+
+### Swarm Cluster
+
+Pull the docker image:
+
+    $ docker pull bhuisgen/zabbix-docker:latest
+
+Create the docker configuration:
+
+    $ cat /etc/zabbix-docker.conf | docker config create zabbix-docker -
+
+Create a global service to deploy agent on all cluster nodes:
+
+    $ docker service create --mode global --name zabbix-docker \
+        --config source=zabbix-docker,target=/etc/zabbix-docker.conf,mode=0640 \
+        bhuisgen/zabbix-docker:0.4.4
