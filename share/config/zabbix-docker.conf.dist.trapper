@@ -18,6 +18,11 @@ swarm_stacks = no
 
 [docker]
 #base_url = unix:///var/run/docker.sock
+#tls = no
+#tls_ca =
+#tls_cert =
+#tls_key =
+#version = auto
 #timeout = 60
 
 [zabbix]
