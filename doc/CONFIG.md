@@ -140,6 +140,11 @@ Default values should be sufficient for any kind of engine (local node or cluste
 
 Options:
 * base_url
+* tls
+* tls_ca
+* tls_cert
+* tls_key
+* version
 * timeout
 
 **base_url**
@@ -147,7 +152,42 @@ Options:
 * values: path, URL
 * default: unix:///var/run/docker.sock
 
-The path to the socket daemon or its URL if available from the network.
+URL to connect to the local docker engine. It could be a path or an URL depending of the connection type:
+- a UNIX socket: unix:///var/run/docker.sock
+- a TCP connection: tcp://127.0.0.1:2375, tcp://127.0.0.1:2376, tcp://remote-host:2376
+
+**tls**
+* type: boolean
+* values: yes, no
+* default: no
+
+Enable TLS over a TCP connection to the docker engine. *tls_ca*, *tls_cert* and *tls_key* options are mandatory.
+
+**tls_ca**
+* type: string
+* default:
+
+The path to the TLS CA certificate file.
+
+**tls_cert**
+* type: string
+* default:
+
+The path to the TLS client certificate file.
+
+**tls_key**
+* type: string
+* default:
+
+The path to the TLS client key file.
+
+**version**
+* type: string
+* default: auto
+
+The server API version to use.
+
+Set to *auto* to automatically detect the server’s version.
 
 **timeout**
 * type: integer

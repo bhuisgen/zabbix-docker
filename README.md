@@ -51,7 +51,7 @@ Pull the docker image:
 Create and run the container:
 
     $ docker run -it --name zabbix-docker \
-        -v /etc/zabbix-docker.conf:/etc/zabbix-docker.conf \
+        -v zabbix-docker.conf:/etc/zabbix-docker.conf \
         -v /var/run/docker.sock:/var/run/docker.sock \
         bhuisgen/zabbix-docker:0.4.4
 
@@ -63,7 +63,7 @@ Pull the docker image:
 
 Create the docker configuration:
 
-    $ cat /etc/zabbix-docker.conf | docker config create zabbix-docker -
+    $ cat zabbix-docker.conf | docker config create zabbix-docker -
 
 Create a global service to deploy agent on all cluster nodes:
 
