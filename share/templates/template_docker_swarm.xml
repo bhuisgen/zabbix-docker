@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
-    <version>4.0</version>
-    <date>2019-07-12T07:18:38Z</date>
+    <version>4.2</version>
+    <date>2020-07-06T08:59:12Z</date>
     <groups>
         <group>
             <name>Templates</name>
@@ -1980,7 +1980,32 @@
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
-                            <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_failed[{#NAME}].min(5m)}&lt;&gt;0 or {Custom Template Docker Swarm:docker.swarm.services.tasks_rejected[{#NAME}].min(5m)}&lt;&gt;0 or {Custom Template Docker Swarm:docker.swarm.services.tasks_orphaned[{#NAME}].min(5m)}&lt;&gt;0</expression>
+                            <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_total[{#NAME}].nodata(5m)}&lt;&gt;0</expression>
+                            <recovery_mode>0</recovery_mode>
+                            <recovery_expression/>
+                            <name>Docker swarm service {#NAME} is not available on {HOST.NAME}</name>
+                            <correlation_mode>0</correlation_mode>
+                            <correlation_tag/>
+                            <url/>
+                            <status>0</status>
+                            <priority>4</priority>
+                            <description/>
+                            <type>0</type>
+                            <manual_close>0</manual_close>
+                            <dependencies/>
+                            <tags>
+                                <tag>
+                                    <tag>DOCKER_SERVICE</tag>
+                                    <value>{#NAME}</value>
+                                </tag>
+                                <tag>
+                                    <tag>DOCKER_STACK</tag>
+                                    <value>{#STACK}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_total[{#NAME}].last()}&lt;&gt;0 and ({Custom Template Docker Swarm:docker.swarm.services.tasks_failed[{#NAME}].min(5m)}&lt;&gt;0 or {Custom Template Docker Swarm:docker.swarm.services.tasks_rejected[{#NAME}].min(5m)}&lt;&gt;0 or {Custom Template Docker Swarm:docker.swarm.services.tasks_orphaned[{#NAME}].min(5m)}&lt;&gt;0)</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
                             <name>Docker swarm service {#NAME} is not healthy on {HOST.NAME}</name>
@@ -1995,7 +2020,7 @@
                             <dependencies>
                                 <dependency>
                                     <name>Docker swarm service {#NAME} is not running on {HOST.NAME}</name>
-                                    <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_running[{#NAME}].max(5m)}=0</expression>
+                                    <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_total[{#NAME}].last()}&lt;&gt;0 and {Custom Template Docker Swarm:docker.swarm.services.tasks_running[{#NAME}].max(5m)}=0</expression>
                                     <recovery_expression/>
                                 </dependency>
                             </dependencies>
@@ -2011,7 +2036,32 @@
                             </tags>
                         </trigger_prototype>
                         <trigger_prototype>
-                            <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_running[{#NAME}].max(5m)}=0</expression>
+                            <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_total[{#NAME}].last()}&lt;&gt;0 and {Custom Template Docker Swarm:docker.swarm.services.mode[{#NAME}].str(replicated)}=1 and {Custom Template Docker Swarm:docker.swarm.services.replicas[{#NAME}].max(5m)}=1</expression>
+                            <recovery_mode>0</recovery_mode>
+                            <recovery_expression/>
+                            <name>Docker swarm service {#NAME} is not replicated on {HOST.NAME}</name>
+                            <correlation_mode>0</correlation_mode>
+                            <correlation_tag/>
+                            <url/>
+                            <status>0</status>
+                            <priority>2</priority>
+                            <description/>
+                            <type>0</type>
+                            <manual_close>0</manual_close>
+                            <dependencies/>
+                            <tags>
+                                <tag>
+                                    <tag>DOCKER_SERVICE</tag>
+                                    <value>{#NAME}</value>
+                                </tag>
+                                <tag>
+                                    <tag>DOCKER_STACK</tag>
+                                    <value>{#STACK}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_total[{#NAME}].last()}&lt;&gt;0 and {Custom Template Docker Swarm:docker.swarm.services.tasks_running[{#NAME}].max(5m)}=0</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
                             <name>Docker swarm service {#NAME} is not running on {HOST.NAME}</name>
@@ -2020,6 +2070,37 @@
                             <url/>
                             <status>0</status>
                             <priority>4</priority>
+                            <description/>
+                            <type>0</type>
+                            <manual_close>0</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Docker swarm service {#NAME} is not available on {HOST.NAME}</name>
+                                    <expression>{Custom Template Docker Swarm:docker.swarm.services.tasks_total[{#NAME}].nodata(5m)}&lt;&gt;0</expression>
+                                    <recovery_expression/>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DOCKER_SERVICE</tag>
+                                    <value>{#NAME}</value>
+                                </tag>
+                                <tag>
+                                    <tag>DOCKER_STACK</tag>
+                                    <value>{#STACK}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{Custom Template Docker Swarm:docker.swarm.services.update_status.state[{#NAME}].str(rollback_completed)}=1</expression>
+                            <recovery_mode>0</recovery_mode>
+                            <recovery_expression/>
+                            <name>Docker swarm service {#NAME} update has rolled back on {HOST.NAME}</name>
+                            <correlation_mode>0</correlation_mode>
+                            <correlation_tag/>
+                            <url/>
+                            <status>0</status>
+                            <priority>2</priority>
                             <description/>
                             <type>0</type>
                             <manual_close>0</manual_close>
@@ -2070,6 +2151,31 @@
                             <url/>
                             <status>0</status>
                             <priority>2</priority>
+                            <description/>
+                            <type>0</type>
+                            <manual_close>0</manual_close>
+                            <dependencies/>
+                            <tags>
+                                <tag>
+                                    <tag>DOCKER_SERVICE</tag>
+                                    <value>{#NAME}</value>
+                                </tag>
+                                <tag>
+                                    <tag>DOCKER_STACK</tag>
+                                    <value>{#STACK}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{Custom Template Docker Swarm:docker.swarm.services.update_status.state[{#NAME}].str(rollback_started)}=1</expression>
+                            <recovery_mode>0</recovery_mode>
+                            <recovery_expression/>
+                            <name>Docker swarm service {#NAME} update is rolling back on {HOST.NAME}</name>
+                            <correlation_mode>0</correlation_mode>
+                            <correlation_tag/>
+                            <url/>
+                            <status>0</status>
+                            <priority>1</priority>
                             <description/>
                             <type>0</type>
                             <manual_close>0</manual_close>
@@ -2315,6 +2421,9 @@
                     <ssl_key_password/>
                     <verify_peer>0</verify_peer>
                     <verify_host>0</verify_host>
+                    <lld_macro_paths/>
+                    <preprocessing/>
+                    <master_item/>
                 </discovery_rule>
                 <discovery_rule>
                     <name>Stacks discovery</name>
@@ -2598,6 +2707,27 @@
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
+                            <expression>{Custom Template Docker Swarm:docker.swarm.stacks.services_error[{#NAME}].nodata(5m)}&lt;&gt;0</expression>
+                            <recovery_mode>0</recovery_mode>
+                            <recovery_expression/>
+                            <name>Docker swarm stack {#NAME} is not available on {HOST.NAME}</name>
+                            <correlation_mode>0</correlation_mode>
+                            <correlation_tag/>
+                            <url/>
+                            <status>0</status>
+                            <priority>4</priority>
+                            <description/>
+                            <type>0</type>
+                            <manual_close>0</manual_close>
+                            <dependencies/>
+                            <tags>
+                                <tag>
+                                    <tag>DOCKER_STACK</tag>
+                                    <value>{#NAME}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                        <trigger_prototype>
                             <expression>{Custom Template Docker Swarm:docker.swarm.stacks.services_unhealthy[{#NAME}].min(5m)}&lt;&gt;0</expression>
                             <recovery_mode>0</recovery_mode>
                             <recovery_expression/>
@@ -2637,7 +2767,13 @@
                             <description/>
                             <type>0</type>
                             <manual_close>0</manual_close>
-                            <dependencies/>
+                            <dependencies>
+                                <dependency>
+                                    <name>Docker swarm stack {#NAME} is not available on {HOST.NAME}</name>
+                                    <expression>{Custom Template Docker Swarm:docker.swarm.stacks.services_error[{#NAME}].nodata(5m)}&lt;&gt;0</expression>
+                                    <recovery_expression/>
+                                </dependency>
+                            </dependencies>
                             <tags>
                                 <tag>
                                     <tag>DOCKER_STACK</tag>
@@ -2723,6 +2859,9 @@
                     <ssl_key_password/>
                     <verify_peer>0</verify_peer>
                     <verify_host>0</verify_host>
+                    <lld_macro_paths/>
+                    <preprocessing/>
+                    <master_item/>
                 </discovery_rule>
             </discovery_rules>
             <httptests/>
@@ -2738,6 +2877,7 @@
             </macros>
             <templates/>
             <screens/>
+            <tags/>
         </template>
     </templates>
     <triggers>
