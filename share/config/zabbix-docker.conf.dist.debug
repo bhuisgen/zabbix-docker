@@ -13,6 +13,8 @@ images = yes
 networks = yes
 volumes = yes
 swarm = yes
+swarm_configs = no
+swarm_secrets = no
 swarm_services = yes
 swarm_stacks = no
 
@@ -82,6 +84,14 @@ delay = 1:5
 #interval = 60
 
 [swarm]
+#startup = 30
+#interval = 60
+
+[swarm_configs]
+#startup = 30
+#interval = 60
+
+[swarm_secrets]
 #startup = 30
 #interval = 60
 

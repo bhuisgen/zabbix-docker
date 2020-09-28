@@ -19,6 +19,8 @@
 #networks = yes                             # enable networks metrics
 #volumes = yes                              # enable volumes metrics
 #swarm = no                                 # enable swarm metrics
+#swarm_configs = no                         # enable swarm configs metrics
+#swarm_secrets = no                         # enable swarm secrets metrics
 #swarm_services = yes                       # enable swarm services metrics
 #swarm_stacks = no                          # enable swarm stacks metrics
 
@@ -217,6 +219,26 @@
 #
 
 [swarm_services]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker swarm configs metrics
+#
+
+[swarm_configs]
+
+#startup = 30                               # startup interval (seconds)
+#interval = 60                              # execution interval (seconds)
+
+
+#
+# Docker swarm secrets metrics
+#
+
+[swarm_secrets]
 
 #startup = 30                               # startup interval (seconds)
 #interval = 60                              # execution interval (seconds)
