@@ -14,59 +14,67 @@ Supports Docker Community Edition, Docker Entreprise Edition and Docker Universa
 
 # Setup
 
-Install the required python dependencies:
-
-    $ python3 setup.py install
-
-# Configuration
-
 ## Zabbix server
 
 Import the Zabbix templates provided in the directory *docs/zabbix/templates* and enable required discovery rules.
 
 ## Zabbix host
 
-Create the configuration file and configure it to set your zabbix hostname and the server settings:
+Download the docker image:
 
-    # mkdir -p /etc/zabbix-docker
-    # cp share/config/zabbix-docker.conf.dist /etc/zabbix-docker/zabbix-docker.conf
-    # vim /etc/zabbix-docker/zabbix-docker.conf
+    $ docker pull bhuisgen/zabbix-docker:latest
+
+Create and edit your configuration file:
+
+    $ cp share/config/zabbix-docker.conf.dist zabbix-docker.conf
+    $ vi zabbix-docker.conf
 
 For more information on the configuration settings, read the following [documentation](doc/CONFIG.md)
 
-Everything is ready to run the agent:
+The docker image can be used on any kind of docker host engine and OS.
 
-    # ./bin/zabbix-docker
-
-# Docker setup
-
-The docker image can be used on any docker engine.
-
-### Standalone Engine
-
-Pull the docker image:
-
-    $ docker pull bhuisgen/zabbix-docker:0.4.4
+### Standalone node
 
 Create and run the container:
 
     $ docker run -it --name zabbix-docker \
-        -v /etc/zabbix-docker.conf:/etc/zabbix-docker.conf \
+        -v zabbix-docker.conf:/etc/zabbix-docker.conf \
         -v /var/run/docker.sock:/var/run/docker.sock \
-        bhuisgen/zabbix-docker:0.4.4
+        bhuisgen/zabbix-docker:latest
 
-### Swarm Cluster
+### Swarm node
 
-Pull the docker image:
+Create a docker config resource:
 
-    $ docker pull bhuisgen/zabbix-docker:latest
-
-Create the docker configuration:
-
-    $ cat /etc/zabbix-docker.conf | docker config create zabbix-docker -
+    $ cat zabbix-docker.conf | docker config create zabbix-docker -
 
 Create a global service to deploy agent on all cluster nodes:
 
     $ docker service create --mode global --name zabbix-docker \
-        --config source=zabbix-docker,target=/etc/zabbix-docker.conf,mode=0640 \
-        bhuisgen/zabbix-docker:0.4.4
+        --config source=zabbix-docker,target=/etc/zabbix-docker.conf,mode=0644 \
+        bhuisgen/zabbix-docker:latest
+
+# Development
+
+## Setup
+
+Install the required python dependencies:
+
+    $ python -m venv venv
+    $ source venv/bin/activate
+    $ (venv) pip install -r requirements.txt -r requirements.dev.txt
+
+Create a configuration file and edit your zabbix hostname and the server settings:
+
+    $ (venv) cp share/config/zabbix-docker.conf.dist zabbix-docker.conf
+    $ (venv) vi zabbix-docker.conf
+
+Everything is ready to run the agent:
+
+    $ (venv) ./bin/zabbix-docker
+
+## Test
+
+Before submitting a contribution to this project, please run the unit tests:
+
+    $ (venv) tox
