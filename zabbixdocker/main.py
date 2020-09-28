@@ -19,7 +19,8 @@ from zabbixdocker.services.discovery import DockerDiscoveryService
 from zabbixdocker.services.events import DockerEventsService
 from zabbixdocker.services.images import DockerImagesService
 from zabbixdocker.services.networks import DockerNetworksService
-from zabbixdocker.services.swarm import DockerSwarmService, DockerSwarmServicesService, DockerSwarmStacksService
+from zabbixdocker.services.swarm import DockerSwarmService, DockerSwarmConfigsService, DockerSwarmSecretsService, \
+    DockerSwarmServicesService, DockerSwarmStacksService
 from zabbixdocker.services.volumes import DockerVolumesService
 from zabbixdocker.version import __version__
 
@@ -141,6 +142,14 @@ class Application(object):
         interval = 60
 
         [swarm]
+        startup = 30
+        interval = 60
+
+        [swarm_configs]
+        startup = 30
+        interval = 60
+
+        [swarm_secrets]
         startup = 30
         interval = 60
 
@@ -289,6 +298,16 @@ class Application(object):
         if self._config.getboolean("main", "swarm") is True:
             swarm_service = DockerSwarmService(self._config, self._stop_event, docker_client, zabbix_sender)
             swarm_service.start()
+
+            if self._config.getboolean("main", "swarm_configs") is True:
+                swarm_configs_service = DockerSwarmConfigsService(self._config, self._stop_event, docker_client,
+                                                                  zabbix_sender)
+                swarm_configs_service.start()
+
+            if self._config.getboolean("main", "swarm_secrets") is True:
+                swarm_secrets_service = DockerSwarmSecretsService(self._config, self._stop_event, docker_client,
+                                                                  zabbix_sender)
+                swarm_secrets_service.start()
 
             if self._config.getboolean("main", "swarm_services") is True:
                 swarm_services_service = DockerSwarmServicesService(self._config, self._stop_event, docker_client,

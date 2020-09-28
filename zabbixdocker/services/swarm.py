@@ -201,30 +201,6 @@ class DockerSwarmWorker(threading.Thread):
                     )
                 )
 
-                configs = self._docker_client.configs()
-
-                configs_total = len(configs)
-
-                metrics.append(
-                    ZabbixMetric(
-                        self._config.get("zabbix", "hostname_cluster"),
-                        "docker.swarm.configs",
-                        "%d" % configs_total
-                    )
-                )
-
-                secrets = self._docker_client.secrets()
-
-                secrets_total = len(secrets)
-
-                metrics.append(
-                    ZabbixMetric(
-                        self._config.get("zabbix", "hostname_cluster"),
-                        "docker.swarm.secrets",
-                        "%d" % secrets_total
-                    )
-                )
-
                 if len(metrics) > 0:
                     self._logger.debug("sending %d metrics" % len(metrics))
                     self._zabbix_sender.send(metrics)
@@ -260,17 +236,312 @@ class DockerSwarmWorker(threading.Thread):
             return False
 
         inspect = self._docker_client.inspect_node(node_id)
-        leader = False
 
         if (
             "Leader" in inspect["ManagerStatus"] and
             inspect["ManagerStatus"]["Leader"] is True and
             inspect["ManagerStatus"]["Reachability"] == "reachable"
         ):
-            leader = True
+            return True
 
-        if leader is False:
+        return False
+
+
+class DockerSwarmConfigsService(threading.Thread):
+    """ This class implements the service which sends swarm configs metrics """
+
+    def __init__(self, config: configparser.ConfigParser, stop_event: threading.Event, docker_client: docker.APIClient,
+                 zabbix_sender: ZabbixSender):
+        """
+        Initialize the instance
+
+        :param config: the configuration parser
+        :param stop_event: the event to stop execution
+        :param docker_client: the docker client
+        :param zabbix_sender: the zabbix sender
+        """
+        super(DockerSwarmConfigsService, self).__init__()
+        self._logger = logging.getLogger(self.__class__.__name__)
+        self._workers = []
+        self._queue = queue.Queue()
+        self._config = config
+        self._stop_event = stop_event
+        self._docker_client = docker_client
+        self._zabbix_sender = zabbix_sender
+
+    def run(self):
+        """
+        Execute the thread
+        """
+        worker = DockerSwarmConfigsWorker(self._config, self._docker_client, self._zabbix_sender, self._queue)
+        worker.setDaemon(True)
+        self._workers.append(worker)
+
+        self._logger.info("service started")
+
+        if self._config.getint("swarm_configs", "startup") > 0:
+            self._stop_event.wait(self._config.getint("swarm_configs", "startup"))
+
+        for worker in self._workers:
+            worker.start()
+
+        while True:
+            self._execute()
+
+            if self._stop_event.wait(self._config.getint("swarm_configs", "interval")):
+                break
+
+        self._logger.info("service stopped")
+
+    def _execute(self):
+        """
+        Execute the metrics sending
+        """
+        self._logger.debug("requesting configs metrics")
+        self._queue.put("metrics")
+
+
+class DockerSwarmConfigsWorker(threading.Thread):
+    """ This class implements a swarm configs worker thread """
+
+    def __init__(self, config: configparser.ConfigParser, docker_client: docker.APIClient, zabbix_sender: ZabbixSender,
+                 configs_queue: queue.Queue):
+        """
+        Initialize the instance
+        :param config: the configuration parser
+        :param docker_client: the docker client
+        :param zabbix_sender: the zabbix sender
+        :param configs_queue: the configs queue
+        """
+        super(DockerSwarmConfigsWorker, self).__init__()
+        self._logger = logging.getLogger(self.__class__.__name__)
+        self._config = config
+        self._docker_client = docker_client
+        self._zabbix_sender = zabbix_sender
+        self._configs_queue = configs_queue
+
+    def run(self):
+        """
+        Execute the thread
+        """
+        while True:
+            self._logger.debug("waiting execution queue")
+            item = self._configs_queue.get()
+            if item is None:
+                break
+
+            self._logger.info("sending configs metrics")
+
+            try:
+                if self._check_leader() is False:
+                    self._logger.debug("node is not the swarm leader")
+
+                    continue
+
+                metrics = []
+
+                configs = self._docker_client.configs()
+
+                configs_total = len(configs)
+
+                metrics.append(
+                    ZabbixMetric(
+                        self._config.get("zabbix", "hostname_cluster"),
+                        "docker.swarm.configs.total",
+                        "%d" % configs_total
+                    )
+                )
+
+                if len(metrics) > 0:
+                    self._logger.debug("sending %d metrics" % len(metrics))
+                    self._zabbix_sender.send(metrics)
+            except (IOError, OSError, LookupError, ValueError):
+                self._logger.error("failed to send configs metrics")
+
+    def _check_leader(self) -> bool:
+        """
+        Check if the node is the current swarm leader
+
+        :return: True if host is the leader; False otherwise
+        """
+        info = self._docker_client.info()
+
+        if (
+            "Swarm" not in info or
+            info["Swarm"] == "inactive" or
+            "NodeID" not in info["Swarm"] or
+            info["Swarm"]["NodeID"] == "" or
+            "RemoteManagers" not in info["Swarm"] or
+            info["Swarm"]["RemoteManagers"] is None
+        ):
             return False
+
+        node_id = info["Swarm"]["NodeID"]
+        manager = False
+
+        for remote_manager in info["Swarm"]["RemoteManagers"]:
+            if remote_manager["NodeID"] == node_id:
+                manager = True
+
+        if manager is False:
+            return False
+
+        inspect = self._docker_client.inspect_node(node_id)
+
+        if (
+            "Leader" in inspect["ManagerStatus"] and
+            inspect["ManagerStatus"]["Leader"] is True and
+            inspect["ManagerStatus"]["Reachability"] == "reachable"
+        ):
+            return True
+
+        return False
+
+
+class DockerSwarmSecretsService(threading.Thread):
+    """ This class implements the service which sends swarm secrets metrics """
+
+    def __init__(self, config: configparser.ConfigParser, stop_event: threading.Event, docker_client: docker.APIClient,
+                 zabbix_sender: ZabbixSender):
+        """
+        Initialize the instance
+
+        :param config: the configuration parser
+        :param stop_event: the event to stop execution
+        :param docker_client: the docker client
+        :param zabbix_sender: the zabbix sender
+        """
+        super(DockerSwarmSecretsService, self).__init__()
+        self._logger = logging.getLogger(self.__class__.__name__)
+        self._workers = []
+        self._queue = queue.Queue()
+        self._config = config
+        self._stop_event = stop_event
+        self._docker_client = docker_client
+        self._zabbix_sender = zabbix_sender
+
+    def run(self):
+        """
+        Execute the thread
+        """
+        worker = DockerSwarmSecretsWorker(self._config, self._docker_client, self._zabbix_sender, self._queue)
+        worker.setDaemon(True)
+        self._workers.append(worker)
+
+        self._logger.info("service started")
+
+        if self._config.getint("swarm_secrets", "startup") > 0:
+            self._stop_event.wait(self._config.getint("swarm_secrets", "startup"))
+
+        for worker in self._workers:
+            worker.start()
+
+        while True:
+            self._execute()
+
+            if self._stop_event.wait(self._config.getint("swarm_secrets", "interval")):
+                break
+
+        self._logger.info("service stopped")
+
+    def _execute(self):
+        """
+        Execute the metrics sending
+        """
+        self._logger.debug("requesting configs metrics")
+        self._queue.put("metrics")
+
+
+class DockerSwarmSecretsWorker(threading.Thread):
+    """ This class implements a swarm secrets worker thread """
+
+    def __init__(self, config: configparser.ConfigParser, docker_client: docker.APIClient, zabbix_sender: ZabbixSender,
+                 secrets_queue: queue.Queue):
+        """
+        Initialize the instance
+        :param config: the configuration parser
+        :param docker_client: the docker client
+        :param zabbix_sender: the zabbix sender
+        :param secrets_queue: the secrets queue
+        """
+        super(DockerSwarmSecretsWorker, self).__init__()
+        self._logger = logging.getLogger(self.__class__.__name__)
+        self._config = config
+        self._docker_client = docker_client
+        self._zabbix_sender = zabbix_sender
+        self._secrets_queue = secrets_queue
+
+    def run(self):
+        """
+        Execute the thread
+        """
+        while True:
+            self._logger.debug("waiting execution queue")
+            item = self._secrets_queue.get()
+            if item is None:
+                break
+
+            self._logger.info("sending secrets metrics")
+
+            try:
+                metrics = []
+
+                secrets = self._docker_client.secrets()
+
+                secrets_total = len(secrets)
+
+                metrics.append(
+                    ZabbixMetric(
+                        self._config.get("zabbix", "hostname_cluster"),
+                        "docker.swarm.secrets.total",
+                        "%d" % secrets_total
+                    )
+                )
+
+                if len(metrics) > 0:
+                    self._logger.debug("sending %d metrics" % len(metrics))
+                    self._zabbix_sender.send(metrics)
+            except (IOError, OSError, LookupError, ValueError):
+                self._logger.error("failed to send configs metrics")
+
+    def _check_leader(self) -> bool:
+        """
+        Check if the node is the current swarm leader
+
+        :return: True if host is the leader; False otherwise
+        """
+        info = self._docker_client.info()
+
+        if (
+            "Swarm" not in info or
+            info["Swarm"] == "inactive" or
+            "NodeID" not in info["Swarm"] or
+            info["Swarm"]["NodeID"] == "" or
+            "RemoteManagers" not in info["Swarm"] or
+            info["Swarm"]["RemoteManagers"] is None
+        ):
+            return False
+
+        node_id = info["Swarm"]["NodeID"]
+        manager = False
+
+        for remote_manager in info["Swarm"]["RemoteManagers"]:
+            if remote_manager["NodeID"] == node_id:
+                manager = True
+
+        if manager is False:
+            return False
+
+        inspect = self._docker_client.inspect_node(node_id)
+
+        if (
+            "Leader" in inspect["ManagerStatus"] and
+            inspect["ManagerStatus"]["Leader"] is True and
+            inspect["ManagerStatus"]["Reachability"] == "reachable"
+        ):
+            return True
+
+        return False
 
 
 class DockerSwarmServicesService(threading.Thread):
@@ -654,17 +925,15 @@ class DockerSwarmServicesWorker(threading.Thread):
             return False
 
         inspect = self._docker_client.inspect_node(node_id)
-        leader = False
 
         if (
             "Leader" in inspect["ManagerStatus"] and
             inspect["ManagerStatus"]["Leader"] is True and
             inspect["ManagerStatus"]["Reachability"] == "reachable"
         ):
-            leader = True
+            return True
 
-        if leader is False:
-            return False
+        return False
 
 
 class DockerSwarmStacksService(threading.Thread):
@@ -883,14 +1152,12 @@ class DockerSwarmStacksWorker(threading.Thread):
             return False
 
         inspect = self._docker_client.inspect_node(node_id)
-        leader = False
 
         if (
             "Leader" in inspect["ManagerStatus"] and
             inspect["ManagerStatus"]["Leader"] is True and
             inspect["ManagerStatus"]["Reachability"] == "reachable"
         ):
-            leader = True
+            return True
 
-        if leader is False:
-            return False
+        return False
