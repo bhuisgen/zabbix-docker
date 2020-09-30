@@ -1,6 +1,8 @@
-## CURRENT
+## 0.4.5 (2020-09-30)
 
+- externalize swarm config and secrets pollers
 - add docker image
+- update docker SDK 4.3.1
 
 ## 0.4.4 (2020-05-08)
 

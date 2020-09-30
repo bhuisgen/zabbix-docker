@@ -15,7 +15,7 @@ LABEL maintainer="bhuisgen@hbis.fr" \
       org.label-schema.version="$BUILD_VERSION" \
       org.label-schema.schema-version="1.0"
 
-ENV ZABBIXDOCKER_VERSION=0.4.4
+ENV ZABBIXDOCKER_VERSION=0.4.5
 
 RUN apk add --update git python3 py3-pip && \
     git clone -b ${ZABBIXDOCKER_VERSION} https://github.com/bhuisgen/zabbix-docker.git /tmp/zabbix-docker && \
